@@ -10,5 +10,5 @@ Future<void> main() async {
 
   IocContainer.initialize();
 
-  runApp(const AppWrapper());
+  runApp(AppWrapper());
 }
