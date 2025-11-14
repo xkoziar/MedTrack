@@ -47,9 +47,7 @@ class _AuthPageState extends State<AuthPage> {
           email: _emailController.text,
           password: _passwdController.text,
         );
-        await _authService.updateUserName(
-          _usernameController.text,
-        );
+        await _authService.updateUserName(_usernameController.text);
 
         final userDbService = get<UserDatabaseService>();
         await userDbService.createUser(
@@ -172,30 +170,19 @@ class _AuthPageState extends State<AuthPage> {
           )
         : null;
 
-    if (emailError != null) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(emailError)));
-      return false;
-    }
-    if (passwordError != null) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(passwordError)));
-      return false;
-    }
-    if (usernameError != null) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(usernameError)));
-      return false;
-    }
-    if (confirmError != null) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(confirmError)));
+    String? error =
+        emailError ?? passwordError ?? usernameError ?? confirmError;
+
+    if (error != null) {
+      _showError(error);
       return false;
     }
     return true;
+  }
+
+  void _showError(String message) {
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
   }
 }
