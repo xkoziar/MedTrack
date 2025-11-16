@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:med_track/pages/home_page.dart';
+import 'package:med_track/pages/profile_page.dart';
 
 class AppShell extends StatefulWidget {
   const AppShell({super.key});
@@ -13,7 +14,7 @@ class _AppShellState extends State<AppShell> {
 
   final List<Widget> _pages = [
     HomePage(),
-    Placeholder(), // buduca ProfilePage
+    const ProfilePage(),
   ];
 
   @override
