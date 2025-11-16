@@ -2,41 +2,33 @@ import 'package:flutter/material.dart';
 
 class CustomTextField extends StatelessWidget {
   final String label;
-  final String hintText;
+  final String? hintText;
   final bool obscure;
-  final TextEditingController? controller;
+  final TextEditingController controller;
+  final String? Function(String?)? validator;
 
   const CustomTextField({
     super.key,
     required this.label,
-    this.hintText = '',
+    this.hintText,
     this.obscure = false,
-    this.controller,
+    required this.controller,
+    this.validator,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: const TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.bold,
-          ),
+    return TextFormField(
+      controller: controller,
+      obscureText: obscure,
+      decoration: InputDecoration(
+        labelText: label,
+        hintText: hintText,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
         ),
-        const SizedBox(height: 8),
-        TextField(
-          controller: controller,
-          obscureText: obscure,
-          decoration: InputDecoration(
-            floatingLabelBehavior: FloatingLabelBehavior.always,
-            hintText: hintText,
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-          ),
-        ),
-      ],
+      ),
+      validator: validator,
     );
   }
 }
