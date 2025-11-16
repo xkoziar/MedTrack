@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart' hide User;
 import 'package:flutter/material.dart';
 import 'package:med_track/database/service/auth_service.dart';
 
@@ -15,7 +16,7 @@ class AuthPage extends StatefulWidget {
 }
 
 class _AuthPageState extends State<AuthPage> {
-  final AuthService _authService = AuthService();
+  late final AuthService _authService;
   final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwdController = TextEditingController();
@@ -27,6 +28,12 @@ class _AuthPageState extends State<AuthPage> {
   bool _isLogin = true;
 
   @override
+  void initState() {
+    super.initState();
+    _authService = get<AuthService>();
+  }
+
+  @override
   void dispose() {
     _usernameController.dispose();
     _emailController.dispose();
@@ -35,29 +42,54 @@ class _AuthPageState extends State<AuthPage> {
     super.dispose();
   }
 
-  void loginOrRegister() async {
-    if (_validateForm()) {
+  Future<void> loginOrRegister() async {
+    if (!_validateForm()) return;
+
+    try {
       if (_isLogin) {
         await _authService.signIn(
-          email: _emailController.text,
-          password: _passwdController.text,
+          email: _emailController.text.trim(),
+          password: _passwdController.text.trim(),
         );
       } else {
         final credential = await _authService.signUp(
-          email: _emailController.text,
-          password: _passwdController.text,
+          email: _emailController.text.trim(),
+          password: _passwdController.text.trim(),
         );
-        await _authService.updateUserName(_usernameController.text);
+        await _authService.updateUserName(_usernameController.text.trim());
 
         final userDbService = get<UserDatabaseService>();
         await userDbService.createUser(
           User(
             id: credential.user!.uid,
-            email: _emailController.text,
-            name: _usernameController.text,
+            email: _emailController.text.trim(),
+            name: _usernameController.text.trim(),
           ),
         );
       }
+    } on FirebaseAuthException catch (e) {
+      String message;
+      switch (e.code) {
+        case 'user-not-found':
+        case 'wrong-password':
+        case 'invalid-credential':
+          message = 'Email or password is incorrect.';
+          break;
+        case 'invalid-email':
+          message = 'Email format is invalid.';
+          break;
+        case 'user-disabled':
+          message = 'This account has been disabled.';
+          break;
+        case 'too-many-requests':
+          message = 'Too many attempts. Please try again in a moment.';
+          break;
+        default:
+          message = 'Authentication failed. Please try again.';
+      }
+      _showError(message);
+    } catch (e) {
+      _showError('Unexpected error. Please try again.');
     }
   }
 
