@@ -17,20 +17,27 @@ class AuthPage extends StatefulWidget {
 
 class _AuthPageState extends State<AuthPage> {
   late final AuthService _authService;
+  late final UserDatabaseService _userDbService;
+
+  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+
   final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwdController = TextEditingController();
   final TextEditingController _confirmPasswdController =
       TextEditingController();
-  static const double _fieldSpacing = 15.0;
+
+  static const double _fieldSpacing = 17.0;
 
   // true = login, false = register
   bool _isLogin = true;
+  bool _isSubmitting = false;
 
   @override
   void initState() {
     super.initState();
     _authService = get<AuthService>();
+    _userDbService = get<UserDatabaseService>();
   }
 
   @override
@@ -42,54 +49,41 @@ class _AuthPageState extends State<AuthPage> {
     super.dispose();
   }
 
-  Future<void> loginOrRegister() async {
-    if (!_validateForm()) return;
+  Future<void> _submit() async {
+    if (_isSubmitting) return;
+
+    final isValid = _formKey.currentState?.validate() ?? false;
+    if (!isValid) return;
+
+    setState(() => _isSubmitting = true);
+
+    final email = _emailController.text.trim();
+    final password = _passwdController.text.trim();
+    final username = _usernameController.text.trim();
 
     try {
       if (_isLogin) {
-        await _authService.signIn(
-          email: _emailController.text.trim(),
-          password: _passwdController.text.trim(),
-        );
+        await _authService.signIn(email: email, password: password);
       } else {
         final credential = await _authService.signUp(
-          email: _emailController.text.trim(),
-          password: _passwdController.text.trim(),
+          email: email,
+          password: password,
         );
-        await _authService.updateUserName(_usernameController.text.trim());
 
-        final userDbService = get<UserDatabaseService>();
-        await userDbService.createUser(
-          User(
-            id: credential.user!.uid,
-            email: _emailController.text.trim(),
-            name: _usernameController.text.trim(),
-          ),
+        await _authService.updateUserName(username);
+
+        await _userDbService.createUser(
+          User(id: credential.user!.uid, email: email, name: username),
         );
       }
     } on FirebaseAuthException catch (e) {
-      String message;
-      switch (e.code) {
-        case 'user-not-found':
-        case 'wrong-password':
-        case 'invalid-credential':
-          message = 'Email or password is incorrect.';
-          break;
-        case 'invalid-email':
-          message = 'Email format is invalid.';
-          break;
-        case 'user-disabled':
-          message = 'This account has been disabled.';
-          break;
-        case 'too-many-requests':
-          message = 'Too many attempts. Please try again in a moment.';
-          break;
-        default:
-          message = 'Authentication failed. Please try again.';
-      }
-      _showError(message);
-    } catch (e) {
+      _showError(_mapAuthError(e));
+    } catch (_) {
       _showError('Unexpected error. Please try again.');
+    } finally {
+      if (mounted) {
+        setState(() => _isSubmitting = false);
+      }
     }
   }
 
@@ -99,75 +93,98 @@ class _AuthPageState extends State<AuthPage> {
       body: Center(
         child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 32),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              const Icon(Icons.medical_services, size: 60),
-              const SizedBox(height: 12),
+          child: Form(
+            key: _formKey,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                const Icon(Icons.medical_services, size: 60),
+                const SizedBox(height: 12),
 
-              const Text(
-                'MedTrack',
-                style: TextStyle(fontSize: 35, fontWeight: FontWeight.bold),
-              ),
-              Text(
-                'Take your meds ahh app',
-                style: TextStyle(fontSize: 18, color: Colors.grey[600]),
-              ),
+                const Text(
+                  'MedTrack',
+                  style: TextStyle(fontSize: 35, fontWeight: FontWeight.bold),
+                ),
+                Text(
+                  'Take your meds ahh app',
+                  style: TextStyle(fontSize: 18, color: Colors.grey[600]),
+                ),
 
-              const SizedBox(height: 40),
+                const SizedBox(height: 40),
 
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  _buildSwitchButton("Login", true),
-                  const SizedBox(width: 8),
-                  _buildSwitchButton("Register", false),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    _buildSwitchButton("Login", true),
+                    const SizedBox(width: 8),
+                    _buildSwitchButton("Register", false),
+                  ],
+                ),
+
+                const SizedBox(height: 25),
+
+                if (!_isLogin) ...[
+                  CustomTextField(
+                    label: "Username",
+                    hintText: 'Your name',
+                    controller: _usernameController,
+                    validator: (value) {
+                      if (_isLogin) return null;
+                      return Validators.username((value ?? '').trim());
+                    },
+                  ),
+                  const SizedBox(height: _fieldSpacing),
                 ],
-              ),
 
-              const SizedBox(height: 25),
-
-              if (!_isLogin) ...[
                 CustomTextField(
-                  label: "Username",
-                  hintText: 'Your name',
-                  controller: _usernameController,
+                  label: "Email",
+                  hintText: 'your@email.com',
+                  controller: _emailController,
+                  validator: (value) => Validators.email((value ?? '').trim()),
                 ),
                 const SizedBox(height: _fieldSpacing),
-              ],
 
-              CustomTextField(
-                label: "Email",
-                hintText: 'your@email.com',
-                controller: _emailController,
-              ),
-              const SizedBox(height: _fieldSpacing),
-
-              CustomTextField(
-                label: "Password",
-                hintText: '••••••••',
-                obscure: true,
-                controller: _passwdController,
-              ),
-              const SizedBox(height: _fieldSpacing),
-
-              if (!_isLogin) ...[
                 CustomTextField(
-                  label: "Confirm Password",
+                  label: "Password",
                   hintText: '••••••••',
                   obscure: true,
-                  controller: _confirmPasswdController,
+                  controller: _passwdController,
+                  validator: (value) =>
+                      Validators.password((value ?? '').trim()),
                 ),
                 const SizedBox(height: _fieldSpacing),
+
+                if (!_isLogin) ...[
+                  CustomTextField(
+                    label: "Confirm Password",
+                    hintText: '••••••••',
+                    obscure: true,
+                    controller: _confirmPasswdController,
+                    validator: (value) {
+                      if (_isLogin) return null;
+                      return Validators.confirmPassword(
+                        _passwdController.text.trim(),
+                        (value ?? '').trim(),
+                      );
+                    },
+                  ),
+                  const SizedBox(height: _fieldSpacing),
+                ],
+
+                const SizedBox(height: 20),
+
+                ElevatedButton(
+                  onPressed: _isSubmitting ? null : _submit,
+                  child: _isSubmitting
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : Text(_isLogin ? 'Login' : 'Register'),
+                ),
               ],
-
-              const SizedBox(height: 20),
-
-              ElevatedButton(
-                onPressed: loginOrRegister,
-                child: Text(_isLogin ? 'Login' : 'Register'),
-              ),
-            ],
+            ),
           ),
         ),
       ),
@@ -175,11 +192,22 @@ class _AuthPageState extends State<AuthPage> {
   }
 
   Widget _buildSwitchButton(String text, bool isLoginButton) {
-    bool isActive = (isLoginButton == _isLogin);
+    final bool isActive = (isLoginButton == _isLogin);
 
     return TextButton(
       onPressed: () {
-        setState(() => _isLogin = isLoginButton);
+        if (_isLogin == isLoginButton) return;
+
+        setState(() {
+          _isLogin = isLoginButton;
+
+          _formKey.currentState?.reset();
+          _passwdController.clear();
+          _confirmPasswdController.clear();
+          if (_isLogin) {
+            _usernameController.clear();
+          }
+        });
       },
       style: TextButton.styleFrom(
         backgroundColor: isActive ? Colors.deepPurpleAccent : Colors.grey[400],
@@ -189,30 +217,25 @@ class _AuthPageState extends State<AuthPage> {
     );
   }
 
-  bool _validateForm() {
-    String? emailError = Validators.email(_emailController.text);
-    String? passwordError = Validators.password(_passwdController.text);
-    String? usernameError = !_isLogin
-        ? Validators.username(_usernameController.text)
-        : null;
-    String? confirmError = !_isLogin
-        ? Validators.confirmPassword(
-            _passwdController.text,
-            _confirmPasswdController.text,
-          )
-        : null;
-
-    String? error =
-        emailError ?? passwordError ?? usernameError ?? confirmError;
-
-    if (error != null) {
-      _showError(error);
-      return false;
+  String _mapAuthError(FirebaseAuthException e) {
+    switch (e.code) {
+      case 'user-not-found':
+      case 'wrong-password':
+      case 'invalid-credential':
+        return 'Email or password is incorrect.';
+      case 'invalid-email':
+        return 'Email format is invalid.';
+      case 'user-disabled':
+        return 'This account has been disabled.';
+      case 'too-many-requests':
+        return 'Too many attempts. Please try again in a moment.';
+      default:
+        return 'Authentication failed. Please try again.';
     }
-    return true;
   }
 
   void _showError(String message) {
+    if (!mounted) return;
     ScaffoldMessenger.of(
       context,
     ).showSnackBar(SnackBar(content: Text(message)));
