@@ -27,8 +27,15 @@ class _HomePageState extends State<HomePage> {
 
   String _userName = '';
   bool _isLoading = true;
-  List<Medication> _medications = [];
-  Set<String> _takenMedications = {};
+  final List<Medication> _medications = [];
+  final Set<String> _takenMedications = {};
+
+  @override
+  void dispose() {
+    _medications.clear();
+    _takenMedications.clear();
+    super.dispose();
+  }
 
   @override
   void initState() {
@@ -44,7 +51,8 @@ class _HomePageState extends State<HomePage> {
 
       setState(() {
         _userName = user?.name ?? 'User';
-        _medications = medications;
+        _medications.clear();
+        _medications.addAll(medications);
         _isLoading = false;
       });
     }

@@ -31,7 +31,7 @@ class NotificationSettingsCard extends StatelessWidget {
               title: const Text('Enable Notifications'),
               subtitle: const Text('Receive reminders for medication doses'),
               value: user.notificationsEnabled,
-              activeColor: AppColors.primary,
+              activeThumbColor: AppColors.primary,
               onChanged: onToggle,
             ),
           ],

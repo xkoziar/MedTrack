@@ -13,7 +13,7 @@ class Medication {
   final List<DateTime> scheduleTimes;
   final List<int> scheduleDays;
 
-  Medication({
+  const Medication({
     required this.id,
     required this.userId,
     required this.name,
@@ -34,5 +34,25 @@ class Medication {
 
   static List<String> _timesToJson(List<DateTime> times) {
     return times.map((t) => t.toIso8601String()).toList();
+  }
+
+  Medication copyWith({
+    String? id,
+    String? userId,
+    String? name,
+    String? description,
+    String? dosage,
+    List<DateTime>? scheduleTimes,
+    List<int>? scheduleDays,
+  }) {
+    return Medication(
+      id: id ?? this.id,
+      userId: userId ?? this.userId,
+      name: name ?? this.name,
+      description: description ?? this.description,
+      dosage: dosage ?? this.dosage,
+      scheduleTimes: scheduleTimes ?? this.scheduleTimes,
+      scheduleDays: scheduleDays ?? this.scheduleDays,
+    );
   }
 }

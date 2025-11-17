@@ -7,6 +7,7 @@ import 'package:med_track/database/model/user.dart';
 import '../database/components/custom_text_field.dart';
 import '../utils/validators.dart';
 import '../utils/constants.dart';
+import '../utils/snackbar_utils.dart';
 import 'profile/profile_header.dart';
 import 'profile/user_info_card.dart';
 import 'profile/notification_settings_card.dart';
@@ -105,12 +106,7 @@ class _ProfilePageState extends State<ProfilePage> {
 
   Future<void> _toggleNotifications(bool value) async {
     try {
-      final updatedUser = User(
-        id: _currentUser!.id,
-        email: _currentUser!.email,
-        name: _currentUser!.name,
-        notificationsEnabled: value,
-      );
+      final updatedUser = _currentUser!.copyWith(notificationsEnabled: value);
 
       await _userDbService.updateUser(updatedUser);
 
@@ -119,10 +115,10 @@ class _ProfilePageState extends State<ProfilePage> {
       });
 
       if (!mounted) return;
-      _showSnackBar('Notification settings updated');
+      showSnackBar(context, 'Notification settings updated');
     } catch (e) {
       if (!mounted) return;
-      _showSnackBar('Failed to update settings: $e');
+      showSnackBar(context, 'Failed to update settings: $e');
     }
   }
 
@@ -144,6 +140,8 @@ class _ProfilePageState extends State<ProfilePage> {
                 hintText: '••••••••',
                 obscure: true,
                 controller: currentPasswordController,
+                validator: (value) =>
+                    (value?.isEmpty ?? true) ? 'Current password is required' : null,
               ),
               const SizedBox(height: 16),
               CustomTextField(
@@ -151,6 +149,7 @@ class _ProfilePageState extends State<ProfilePage> {
                 hintText: '••••••••',
                 obscure: true,
                 controller: newPasswordController,
+                validator: Validators.password,
               ),
               const SizedBox(height: 16),
               CustomTextField(
@@ -158,6 +157,8 @@ class _ProfilePageState extends State<ProfilePage> {
                 hintText: '••••••••',
                 obscure: true,
                 controller: confirmPasswordController,
+                validator: (value) =>
+                    Validators.confirmPassword(newPasswordController.text, value),
               ),
             ],
           ),
@@ -169,18 +170,23 @@ class _ProfilePageState extends State<ProfilePage> {
           ),
           ElevatedButton(
             onPressed: () async {
+              final navigator = Navigator.of(context);
               await _changePassword(
                 currentPasswordController.text,
                 newPasswordController.text,
                 confirmPasswordController.text,
               );
-              if (mounted) Navigator.pop(context);
+              if (mounted) navigator.pop();
             },
             child: const Text('Change Password'),
           ),
         ],
       ),
-    );
+    ).then((_) {
+      currentPasswordController.dispose();
+      newPasswordController.dispose();
+      confirmPasswordController.dispose();
+    });
   }
 
   Future<void> _changePassword(
@@ -193,17 +199,17 @@ class _ProfilePageState extends State<ProfilePage> {
         Validators.confirmPassword(newPassword, confirmPassword);
 
     if (currentPassword.isEmpty) {
-      _showSnackBar('Current password is required');
+      showSnackBar(context, 'Current password is required');
       return;
     }
 
     if (passwordError != null) {
-      _showSnackBar(passwordError);
+      showSnackBar(context, passwordError);
       return;
     }
 
     if (confirmError != null) {
-      _showSnackBar(confirmError);
+      showSnackBar(context, confirmError);
       return;
     }
 
@@ -215,10 +221,10 @@ class _ProfilePageState extends State<ProfilePage> {
       );
 
       if (!mounted) return;
-      _showSnackBar('Password changed successfully');
+      showSnackBar(context, 'Password changed successfully');
     } catch (e) {
       if (!mounted) return;
-      _showSnackBar('Failed to change password: ${e.toString()}');
+      showSnackBar(context, 'Failed to change password: $e');
     }
   }
 
@@ -235,24 +241,28 @@ class _ProfilePageState extends State<ProfilePage> {
             const Text('Delete Account'),
           ],
         ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'This action cannot be undone. All your data will be permanently deleted.',
-              style: TextStyle(fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: AppSpacing.lg),
-            const Text('Please enter your password to confirm:'),
-            const SizedBox(height: AppSpacing.md),
-            CustomTextField(
-              label: 'Password',
-              hintText: '••••••••',
-              obscure: true,
-              controller: passwordController,
-            ),
-          ],
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'This action cannot be undone. All your data will be permanently deleted.',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: AppSpacing.lg),
+              const Text('Please enter your password to confirm:'),
+              const SizedBox(height: AppSpacing.md),
+              CustomTextField(
+                label: 'Password',
+                hintText: '••••••••',
+                obscure: true,
+                controller: passwordController,
+                validator: (value) =>
+                    value?.isEmpty ?? true ? 'Password is required' : null,
+              ),
+            ],
+          ),
         ),
         actions: [
           TextButton(
@@ -270,12 +280,14 @@ class _ProfilePageState extends State<ProfilePage> {
           ),
         ],
       ),
-    );
+    ).then((_) {
+      passwordController.dispose();
+    });
   }
 
   Future<void> _deleteAccount(String password) async {
     if (password.isEmpty) {
-      _showSnackBar('Password is required');
+      showSnackBar(context, 'Password is required');
       return;
     }
 
@@ -286,16 +298,10 @@ class _ProfilePageState extends State<ProfilePage> {
       );
 
       if (!mounted) return;
-      _showSnackBar('Account deleted successfully');
+      showSnackBar(context, 'Account deleted successfully');
     } catch (e) {
       if (!mounted) return;
-      _showSnackBar('Failed to delete account: ${e.toString()}');
+      showSnackBar(context, 'Failed to delete account: $e');
     }
-  }
-
-  void _showSnackBar(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message)),
-    );
   }
 }

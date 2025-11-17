@@ -9,7 +9,7 @@ class User {
   final String name;
   final bool notificationsEnabled;
 
-  User({
+  const User({
     required this.id,
     required this.email,
     required this.name,
@@ -19,4 +19,18 @@ class User {
   factory User.fromJson(Map<String, dynamic> json) => _$UserFromJson(json);
 
   Map<String, dynamic> toJson() => _$UserToJson(this);
+
+  User copyWith({
+    String? id,
+    String? email,
+    String? name,
+    bool? notificationsEnabled,
+  }) {
+    return User(
+      id: id ?? this.id,
+      email: email ?? this.email,
+      name: name ?? this.name,
+      notificationsEnabled: notificationsEnabled ?? this.notificationsEnabled,
+    );
+  }
 }

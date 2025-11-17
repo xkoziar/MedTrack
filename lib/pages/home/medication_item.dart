@@ -34,7 +34,7 @@ class MedicationItem extends StatelessWidget {
                 width: 48,
                 height: 48,
                 decoration: BoxDecoration(
-                  color: isTaken ? AppColors.primary.withOpacity(0.1) : Colors.grey[100],
+                  color: isTaken ? AppColors.primary.withValues(alpha: 0.1) : Colors.grey[100],
                   borderRadius: BorderRadius.circular(AppSpacing.sm),
                 ),
                 child: Icon(
