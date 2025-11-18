@@ -48,9 +48,7 @@ class _ProfilePageState extends State<ProfilePage> {
   @override
   Widget build(BuildContext context) {
     if (_isLoadingUser) {
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      );
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
     if (_currentUser == null) {
@@ -72,10 +70,7 @@ class _ProfilePageState extends State<ProfilePage> {
     }
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Profile'),
-        centerTitle: true,
-      ),
+      appBar: AppBar(title: const Text('Profile'), centerTitle: true),
       body: SingleChildScrollView(
         padding: AppPadding.page,
         child: Column(
@@ -102,8 +97,6 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
-
-
   Future<void> _toggleNotifications(bool value) async {
     try {
       final updatedUser = _currentUser!.copyWith(notificationsEnabled: value);
@@ -123,70 +116,78 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   void _showChangePasswordDialog() {
-    final currentPasswordController = TextEditingController();
-    final newPasswordController = TextEditingController();
-    final confirmPasswordController = TextEditingController();
+    final formKey = GlobalKey<FormState>();
+
+    final currentPasswordCtrl = TextEditingController();
+    final newPasswordCtrl = TextEditingController();
+    final confirmPasswordCtrl = TextEditingController();
 
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Change Password'),
-        content: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              CustomTextField(
-                label: 'Current Password',
-                hintText: '••••••••',
-                obscure: true,
-                controller: currentPasswordController,
-                validator: (value) =>
-                    (value?.isEmpty ?? true) ? 'Current password is required' : null,
-              ),
-              const SizedBox(height: 16),
-              CustomTextField(
-                label: 'New Password',
-                hintText: '••••••••',
-                obscure: true,
-                controller: newPasswordController,
-                validator: Validators.password,
-              ),
-              const SizedBox(height: 16),
-              CustomTextField(
-                label: 'Confirm New Password',
-                hintText: '••••••••',
-                obscure: true,
-                controller: confirmPasswordController,
-                validator: (value) =>
-                    Validators.confirmPassword(newPasswordController.text, value),
-              ),
-            ],
+      builder: (ctx) {
+        return AlertDialog(
+          title: const Text(
+            'Change Password',
+            style: TextStyle(fontWeight: FontWeight.bold),
           ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
+          content: SingleChildScrollView(
+            child: Form(
+              key: formKey,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  CustomTextField(
+                    label: "Current Password",
+                    hintText: "••••••••",
+                    obscure: true,
+                    controller: currentPasswordCtrl,
+                    validator: (value) => Validators.password(value),
+                  ),
+                  const SizedBox(height: 16),
+                  CustomTextField(
+                    label: "New Password",
+                    hintText: "••••••••",
+                    obscure: true,
+                    controller: newPasswordCtrl,
+                    validator: (value) => Validators.password(value),
+                  ),
+                  const SizedBox(height: 16),
+
+                  CustomTextField(
+                    label: "Confirm New Password",
+                    hintText: "••••••••",
+                    obscure: true,
+                    controller: confirmPasswordCtrl,
+                    validator: (value) =>
+                        Validators.confirmPassword(newPasswordCtrl.text, value),
+                  ),
+                ],
+              ),
+            ),
           ),
-          ElevatedButton(
-            onPressed: () async {
-              final navigator = Navigator.of(context);
-              await _changePassword(
-                currentPasswordController.text,
-                newPasswordController.text,
-                confirmPasswordController.text,
-              );
-              if (mounted) navigator.pop();
-            },
-            child: const Text('Change Password'),
-          ),
-        ],
-      ),
-    ).then((_) {
-      currentPasswordController.dispose();
-      newPasswordController.dispose();
-      confirmPasswordController.dispose();
-    });
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text("Cancel"),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                if (!(formKey.currentState?.validate() ?? false)) return;
+
+                await _changePassword(
+                  currentPasswordCtrl.text,
+                  newPasswordCtrl.text,
+                  confirmPasswordCtrl.text,
+                );
+
+                if (mounted) Navigator.pop(context);
+              },
+              child: const Text("Change Password"),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   Future<void> _changePassword(
@@ -194,25 +195,6 @@ class _ProfilePageState extends State<ProfilePage> {
     String newPassword,
     String confirmPassword,
   ) async {
-    final passwordError = Validators.password(newPassword);
-    final confirmError =
-        Validators.confirmPassword(newPassword, confirmPassword);
-
-    if (currentPassword.isEmpty) {
-      showSnackBar(context, 'Current password is required');
-      return;
-    }
-
-    if (passwordError != null) {
-      showSnackBar(context, passwordError);
-      return;
-    }
-
-    if (confirmError != null) {
-      showSnackBar(context, confirmError);
-      return;
-    }
-
     try {
       await _authService.resetPasswordFromCurrentPassword(
         currentPassword: currentPassword,
@@ -229,60 +211,63 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   void _showDeleteAccountDialog() {
-    final passwordController = TextEditingController();
+    final formKey = GlobalKey<FormState>();
+    final passwordCtrl = TextEditingController();
 
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Row(
-          children: [
-            Icon(Icons.warning, color: AppColors.danger),
-            const SizedBox(width: AppSpacing.sm),
-            const Text('Delete Account'),
-          ],
-        ),
-        content: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                'This action cannot be undone. All your data will be permanently deleted.',
-                style: TextStyle(fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: AppSpacing.lg),
-              const Text('Please enter your password to confirm:'),
-              const SizedBox(height: AppSpacing.md),
-              CustomTextField(
-                label: 'Password',
-                hintText: '••••••••',
-                obscure: true,
-                controller: passwordController,
-                validator: (value) =>
-                    value?.isEmpty ?? true ? 'Password is required' : null,
-              ),
+      builder: (ctx) {
+        return AlertDialog(
+          title: Row(
+            children: const [
+              Icon(Icons.warning, color: Colors.red),
+              SizedBox(width: 8),
+              Text('Delete Account'),
             ],
           ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
+          content: SingleChildScrollView(
+            child: Form(
+              key: formKey,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Text(
+                    "This action cannot be undone. All your data will be permanently deleted.",
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 20),
+
+                  CustomTextField(
+                    label: "Password",
+                    hintText: "••••••••",
+                    obscure: true,
+                    controller: passwordCtrl,
+                    validator: (value) => Validators.password(value),
+                  ),
+                ],
+              ),
+            ),
           ),
-          ElevatedButton(
-            onPressed: () {
-              final password = passwordController.text;
-              Navigator.pop(context);
-              _deleteAccount(password);
-            },
-            style: AppButtonStyles.dangerButton,
-            child: const Text('Delete Account'),
-          ),
-        ],
-      ),
-    ).then((_) {
-      passwordController.dispose();
-    });
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text("Cancel"),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(backgroundColor: Colors.red[300]),
+              onPressed: () async {
+                if (!(formKey.currentState?.validate() ?? false)) return;
+
+                await _deleteAccount(passwordCtrl.text);
+
+                if (mounted) Navigator.pop(context);
+              },
+              child: const Text("Delete Account"),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   Future<void> _deleteAccount(String password) async {
