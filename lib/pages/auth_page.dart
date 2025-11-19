@@ -7,6 +7,7 @@ import '../database/ioc/ioc_container.dart';
 import '../database/model/user.dart';
 import '../database/service/user_database_service.dart';
 import '../utils/validators.dart';
+import '../utils/snackbar_utils.dart';
 
 class AuthPage extends StatefulWidget {
   const AuthPage({super.key});
@@ -235,9 +236,6 @@ class _AuthPageState extends State<AuthPage> {
   }
 
   void _showError(String message) {
-    if (!mounted) return;
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text(message)));
+    showSnackBar(context, message);
   }
 }
