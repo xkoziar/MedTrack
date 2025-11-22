@@ -1,14 +1,23 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:med_track/database/service/user_database_service.dart';
+import 'package:rxdart/transformers.dart';
 
 import '../ioc/ioc_container.dart';
+import '../model/user.dart';
 
 class AuthService {
   final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
+  final UserDatabaseService _userDbService = get<UserDatabaseService>();
 
   User? get user => _firebaseAuth.currentUser;
 
-  Stream<User?> get authStateChanges => _firebaseAuth.authStateChanges();
+  Stream<AppUser?> get currentUserStream => _firebaseAuth.authStateChanges().switchMap((firebaseUser){
+        if (firebaseUser == null) {
+          return Stream.value(null);
+        } else {
+          return _userDbService.observeUser(firebaseUser.uid);
+        }
+  });
 
   Future<UserCredential> signIn({
     required String email,
