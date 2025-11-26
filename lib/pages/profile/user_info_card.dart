@@ -3,7 +3,7 @@ import '../../database/model/user.dart';
 import '../../utils/constants.dart';
 
 class UserInfoCard extends StatelessWidget {
-  final User user;
+  final AppUser user;
 
   const UserInfoCard({super.key, required this.user});
 

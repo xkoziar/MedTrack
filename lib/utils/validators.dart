@@ -12,6 +12,16 @@ class Validators {
     return null;
   }
 
+  static String? loginPassword(String? password) {
+    if (password == null || password.isEmpty) return 'Password is required';
+    return null;
+  }
+
+  static String? loginEmail(String? email) {
+    if (email == null || email.isEmpty) return 'Email is required';
+    return null;
+  }
+
   static String? username(String? username) {
     if (username == null || username.isEmpty) return 'Username is required';
     if (username.length > 50) return 'Username cannot be longer than 50 characters';

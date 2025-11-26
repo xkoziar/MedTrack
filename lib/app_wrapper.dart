@@ -14,7 +14,7 @@ class AppWrapper extends StatelessWidget {
 
     return MaterialApp(
       home: StreamBuilder(
-        stream: authService.authStateChanges,
+        stream: authService.currentUserStream,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());

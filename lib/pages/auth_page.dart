@@ -6,6 +6,7 @@ import '../database/components/custom_text_field.dart';
 import '../database/ioc/ioc_container.dart';
 import '../database/model/user.dart';
 import '../database/service/user_database_service.dart';
+import '../utils/constants.dart';
 import '../utils/validators.dart';
 import '../utils/snackbar_utils.dart';
 
@@ -27,8 +28,6 @@ class _AuthPageState extends State<AuthPage> {
   final TextEditingController _passwdController = TextEditingController();
   final TextEditingController _confirmPasswdController =
       TextEditingController();
-
-  static const double _fieldSpacing = 17.0;
 
   // true = login, false = register
   bool _isLogin = true;
@@ -74,13 +73,15 @@ class _AuthPageState extends State<AuthPage> {
         await _authService.updateUserName(username);
 
         await _userDbService.createUser(
-          User(id: credential.user!.uid, email: email, name: username),
+          AppUser(id: credential.user!.uid, email: email, name: username),
         );
       }
     } on FirebaseAuthException catch (e) {
-      _showError(_mapAuthError(e));
+      if (!mounted) return;
+      showSnackBar(context, _mapAuthError(e));
     } catch (_) {
-      _showError('Unexpected error. Please try again.');
+      if (!mounted) return;
+      showSnackBar(context, 'Unexpected error, try again');
     } finally {
       if (mounted) {
         setState(() => _isSubmitting = false);
@@ -130,30 +131,32 @@ class _AuthPageState extends State<AuthPage> {
                     hintText: 'Your name',
                     controller: _usernameController,
                     validator: (value) {
-                      if (_isLogin) return null;
-                      return Validators.username((value ?? '').trim());
+                      return Validators.username(value?.trim());
                     },
                   ),
-                  const SizedBox(height: _fieldSpacing),
+                  const SizedBox(height: AppSpacing.lg),
                 ],
 
                 CustomTextField(
                   label: "Email",
                   hintText: 'your@email.com',
                   controller: _emailController,
-                  validator: (value) => Validators.email((value ?? '').trim()),
+                  validator: (value) => _isLogin
+                      ? Validators.loginEmail(value)
+                      : Validators.email(value?.trim()),
                 ),
-                const SizedBox(height: _fieldSpacing),
+                const SizedBox(height: AppSpacing.lg),
 
                 CustomTextField(
                   label: "Password",
                   hintText: '••••••••',
                   obscure: true,
                   controller: _passwdController,
-                  validator: (value) =>
-                      Validators.password((value ?? '').trim()),
+                  validator: (value) => _isLogin
+                      ? Validators.loginPassword(value)
+                      : Validators.password(value),
                 ),
-                const SizedBox(height: _fieldSpacing),
+                const SizedBox(height: AppSpacing.lg),
 
                 if (!_isLogin) ...[
                   CustomTextField(
@@ -162,14 +165,13 @@ class _AuthPageState extends State<AuthPage> {
                     obscure: true,
                     controller: _confirmPasswdController,
                     validator: (value) {
-                      if (_isLogin) return null;
                       return Validators.confirmPassword(
-                        _passwdController.text.trim(),
-                        (value ?? '').trim(),
+                        _passwdController.text,
+                        value,
                       );
                     },
                   ),
-                  const SizedBox(height: _fieldSpacing),
+                  const SizedBox(height: AppSpacing.lg),
                 ],
 
                 const SizedBox(height: 20),
@@ -233,9 +235,5 @@ class _AuthPageState extends State<AuthPage> {
       default:
         return 'Authentication failed. Please try again.';
     }
-  }
-
-  void _showError(String message) {
-    showSnackBar(context, message);
   }
 }

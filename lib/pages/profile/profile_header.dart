@@ -3,7 +3,7 @@ import '../../database/model/user.dart';
 import '../../utils/constants.dart';
 
 class ProfileHeader extends StatelessWidget {
-  final User user;
+  final AppUser user;
 
   const ProfileHeader({super.key, required this.user});
 

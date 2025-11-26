@@ -14,7 +14,7 @@ class _AppShellState extends State<AppShell> {
 
   final List<Widget> _pages = [
     HomePage(),
-    const ProfilePage(),
+    ProfilePage(),
   ];
 
   @override

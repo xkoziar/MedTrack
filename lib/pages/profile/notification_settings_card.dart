@@ -3,7 +3,7 @@ import '../../database/model/user.dart';
 import '../../utils/constants.dart';
 
 class NotificationSettingsCard extends StatelessWidget {
-  final User user;
+  final AppUser user;
   final ValueChanged<bool> onToggle;
 
   const NotificationSettingsCard({
