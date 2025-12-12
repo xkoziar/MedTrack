@@ -48,7 +48,7 @@ class DevDataHelper {
     ];
 
     for (final med in sampleMeds) {
-      await service.createMedication(med);
+      await service.create(med.id, med);
     }
   }
 }

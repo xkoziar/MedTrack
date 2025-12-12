@@ -3,7 +3,7 @@ import 'package:med_track/database/service/user_database_service.dart';
 import 'package:rxdart/transformers.dart';
 
 import '../ioc/ioc_container.dart';
-import '../model/user.dart';
+import '../model/app_user.dart';
 
 class AuthService {
   final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
@@ -15,7 +15,7 @@ class AuthService {
         if (firebaseUser == null) {
           return Stream.value(null);
         } else {
-          return _userDbService.observeUser(firebaseUser.uid);
+          return _userDbService.observe(firebaseUser.uid);
         }
   });
 
@@ -76,7 +76,7 @@ class AuthService {
 
     final userId = _firebaseAuth.currentUser!.uid;
     final userDbService = get<UserDatabaseService>();
-    await userDbService.deleteUser(userId);
+    await userDbService.delete(userId);
 
     await _firebaseAuth.currentUser?.delete();
     await signOut();

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../database/model/user.dart';
+import '../../database/model/app_user.dart';
 import '../../utils/constants.dart';
 
 class UserInfoCard extends StatelessWidget {
