@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../../components/custom_text_field.dart';
+import '../../../components/common/custom_text_field.dart';
 import '../../../utils/validators.dart';
 
 class DeleteAccountDialog extends StatefulWidget {

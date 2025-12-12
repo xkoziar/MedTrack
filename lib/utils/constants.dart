@@ -9,6 +9,11 @@ class AppColors {
 }
 
 class AppTextStyles {
+  static const TextStyle heading1 = TextStyle(
+    fontSize: 32,
+    fontWeight: FontWeight.bold,
+  );
+
   static const TextStyle heading2 = TextStyle(
     fontSize: 24,
     fontWeight: FontWeight.bold,
@@ -24,9 +29,7 @@ class AppTextStyles {
     fontWeight: FontWeight.w500,
   );
 
-  static const TextStyle bodySmall = TextStyle(
-    fontSize: 14,
-  );
+  static const TextStyle bodySmall = TextStyle(fontSize: 14);
 
   static const TextStyle avatarLetter = TextStyle(
     fontSize: 40,
@@ -63,6 +66,7 @@ class AppButtonStyles {
     padding: const EdgeInsets.symmetric(vertical: 16),
     backgroundColor: AppColors.primary,
     foregroundColor: Colors.white,
+    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
   );
 
   static ButtonStyle primaryOutlinedButton = OutlinedButton.styleFrom(
@@ -80,5 +84,19 @@ class AppButtonStyles {
     padding: const EdgeInsets.symmetric(vertical: 12),
     side: BorderSide(color: AppColors.danger),
     foregroundColor: AppColors.danger,
+  );
+}
+
+class AppGradients {
+  static const LinearGradient purple = LinearGradient(
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+    colors: [Color(0xFF667EEA), Color(0xFF764BA2)],
+  );
+
+  static const LinearGradient green = LinearGradient(
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+    colors: [Color(0xFF11998E), Color(0xFF38EF7D)],
   );
 }
