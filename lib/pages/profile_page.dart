@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:med_track/database/ioc/ioc_container.dart';
 import 'package:med_track/database/service/auth_service.dart';
 import 'package:med_track/database/service/user_database_service.dart';
-import 'package:med_track/database/model/user.dart';
+import 'package:med_track/database/model/app_user.dart';
 import 'package:med_track/pages/profile/dialogs/change_password_dialog.dart';
 import 'package:med_track/pages/profile/dialogs/delete_account_dialog.dart';
 
@@ -31,7 +31,7 @@ class ProfilePage extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(title: const Text('Profile'), centerTitle: true),
       body: HandlingStreamBuilder<AppUser?>(
-        stream: _userDbService.observeUser(_userId),
+        stream: _userDbService.observe(_userId),
         builder: (user) {
           if (user == null) {
             return Center(
@@ -88,7 +88,7 @@ class ProfilePage extends StatelessWidget {
   ) async {
     try {
       final updatedUser = user.copyWith(notificationsEnabled: value);
-      await _userDbService.updateUser(updatedUser);
+      await _userDbService.update(updatedUser.id, updatedUser);
       if (context.mounted) {
         showSnackBar(context, 'Notification settings updated');
       }

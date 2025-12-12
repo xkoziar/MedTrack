@@ -1,35 +1,30 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import '../model/user.dart';
 
-class UserDatabaseService {
-  final _reference = FirebaseFirestore.instance
-      .collection('users')
-      .withConverter<AppUser>(
-        fromFirestore: (snapshot, options) =>
-            AppUser.fromJson(snapshot.data()!),
-        toFirestore: (value, options) => value.toJson(),
-      );
+import '../model/app_user.dart';
+import '../repository/firestore_repository.dart';
 
-  Future<void> createUser(AppUser user) async {
-    await _reference.doc(user.id).set(user);
-  }
+class UserDatabaseService extends FirestoreRepository<AppUser> {
+  UserDatabaseService()
+      : super(
+    collectionPath: 'users',
+    fromJson: (json, id) => AppUser.fromJson(json),
+    toJson: (user) => user.toJson(),
+  );
 
-  Future<AppUser?> getUser(String userId) async {
-    final doc = await _reference.doc(userId).get();
-    return doc.data();
-  }
+  // -----------------------------------------
+  // CUSTOM METHODS → specific to User entity
+  // -----------------------------------------
 
-  Future<void> updateUser(AppUser user) async {
-    await _reference.doc(user.id).update(user.toJson());
-  }
+  Future<AppUser?> findByEmail(String email) async {
+    final query = await FirebaseFirestore.instance
+        .collection('users')
+        .where('email', isEqualTo: email)
+        .limit(1)
+        .get();
 
-  Future<void> deleteUser(String userId) async {
-    await _reference.doc(userId).delete();
-  }
+    if (query.docs.isEmpty) return null;
 
-  Stream<AppUser?> observeUser(String userId) {
-    return _reference.doc(userId).snapshots().map((snap) {
-      return snap.data();
-    });
+    final data = query.docs.first.data();
+    return AppUser.fromJson(data);
   }
 }

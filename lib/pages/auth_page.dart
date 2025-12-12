@@ -4,7 +4,7 @@ import 'package:med_track/database/service/auth_service.dart';
 
 import '../database/components/custom_text_field.dart';
 import '../database/ioc/ioc_container.dart';
-import '../database/model/user.dart';
+import '../database/model/app_user.dart';
 import '../database/service/user_database_service.dart';
 import '../utils/constants.dart';
 import '../utils/validators.dart';
@@ -72,7 +72,8 @@ class _AuthPageState extends State<AuthPage> {
 
         await _authService.updateUserName(username);
 
-        await _userDbService.createUser(
+        await _userDbService.create(
+          credential.user!.uid,
           AppUser(id: credential.user!.uid, email: email, name: username),
         );
       }

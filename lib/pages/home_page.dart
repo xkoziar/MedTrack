@@ -46,7 +46,7 @@ class _HomePageState extends State<HomePage> {
   Future<void> _loadData() async {
     final userId = _authService.user?.uid;
     if (userId != null) {
-      final user = await _userDbService.getUser(userId);
+      final user = await _userDbService.get(userId);
       final medications = await _medicationDbService.getUserMedications(userId);
 
       setState(() {
