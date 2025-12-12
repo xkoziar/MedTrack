@@ -16,9 +16,10 @@ class AppUser {
     this.notificationsEnabled = true,
   });
 
-  factory AppUser.fromJson(Map<String, dynamic> json) => _$UserFromJson(json);
+  factory AppUser.fromJson(Map<String, dynamic> json) =>
+      _$AppUserFromJson(json);
 
-  Map<String, dynamic> toJson() => _$UserToJson(this);
+  Map<String, dynamic> toJson() => _$AppUserToJson(this);
 
   AppUser copyWith({
     String? id,
