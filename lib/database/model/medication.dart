@@ -7,34 +7,44 @@ class Medication {
   final String id;
   final String userId;
   final String name;
-  final String description;
+  final String? description;
   final String dosage;
-  @JsonKey(fromJson: _timesFromJson, toJson: _timesToJson)
-  final List<DateTime> scheduleTimes;
+  final DateTime startDate;
+  final DateTime? endDate;
+
+  /// Easy pause toggle
+  final bool isActive;
+
+  /// ISO-8601 weekday numbers: 1=Mon ... 7=Sun
   final List<int> scheduleDays;
 
-  const Medication({
+  /// Times in day as "HH:mm" (timezone-safe)
+  final List<String> scheduleTimes;
+
+  /// Optional metadata
+  final DateTime createdAt;
+  final DateTime updatedAt;
+
+  Medication({
     required this.id,
     required this.userId,
     required this.name,
-    this.description = '',
+    this.description,
     required this.dosage,
-    required this.scheduleTimes,
+    required this.startDate,
+    this.endDate,
+    required this.isActive,
     required this.scheduleDays,
+    required this.scheduleTimes,
+    required this.createdAt,
+    required this.updatedAt,
   });
+
 
   factory Medication.fromJson(Map<String, dynamic> json) =>
       _$MedicationFromJson(json);
 
   Map<String, dynamic> toJson() => _$MedicationToJson(this);
-
-  static List<DateTime> _timesFromJson(List<dynamic> times) {
-    return times.map((t) => DateTime.parse(t as String)).toList();
-  }
-
-  static List<String> _timesToJson(List<DateTime> times) {
-    return times.map((t) => t.toIso8601String()).toList();
-  }
 
   Medication copyWith({
     String? id,
@@ -42,8 +52,13 @@ class Medication {
     String? name,
     String? description,
     String? dosage,
-    List<DateTime>? scheduleTimes,
+    DateTime? startDate,
+    DateTime? endDate,
+    bool? isActive,
     List<int>? scheduleDays,
+    List<String>? scheduleTimes,
+    DateTime? createdAt,
+    DateTime? updatedAt,
   }) {
     return Medication(
       id: id ?? this.id,
@@ -51,8 +66,13 @@ class Medication {
       name: name ?? this.name,
       description: description ?? this.description,
       dosage: dosage ?? this.dosage,
-      scheduleTimes: scheduleTimes ?? this.scheduleTimes,
+      startDate: startDate ?? this.startDate,
+      endDate: endDate ?? this.endDate,
+      isActive: isActive ?? this.isActive,
       scheduleDays: scheduleDays ?? this.scheduleDays,
+      scheduleTimes: scheduleTimes ?? this.scheduleTimes,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
     );
   }
 }
