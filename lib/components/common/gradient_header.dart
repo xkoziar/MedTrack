@@ -4,14 +4,14 @@ import '../../utils/constants.dart';
 class GradientSliverHeader extends StatelessWidget {
   final String title;
   final String subtitle;
-  final VoidCallback onBack;
+  final VoidCallback? onBack;
   final Widget? trailing;
 
   const GradientSliverHeader({
     super.key,
     required this.title,
     required this.subtitle,
-    required this.onBack,
+    this.onBack,
     this.trailing,
   });
 
@@ -19,27 +19,32 @@ class GradientSliverHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     return SliverAppBar(
       pinned: true,
-      toolbarHeight: 90,
-      expandedHeight: 130,
+      toolbarHeight: 85,
+      expandedHeight: 100,
       automaticallyImplyLeading: false,
       backgroundColor: Colors.transparent,
       elevation: 0,
       flexibleSpace: Container(
-        decoration: const BoxDecoration(
-          gradient: AppGradients.purple,
-        ),
+        decoration: const BoxDecoration(gradient: AppGradients.purple),
         child: SafeArea(
           bottom: false,
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(12, 10, 12, 16),
+            padding: EdgeInsets.fromLTRB(
+              (onBack != null) ? 5.0 : AppPadding.pageDouble,
+              10,
+              12,
+              16,
+            ),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                IconButton(
-                  onPressed: onBack,
-                  icon: const Icon(Icons.arrow_back, color: Colors.white),
-                ),
-                const SizedBox(width: 6),
+                if (onBack != null) ...[
+                  IconButton(
+                    onPressed: onBack,
+                    icon: const Icon(Icons.arrow_back, color: Colors.white),
+                  ),
+                  const SizedBox(width: 6),
+                ],
                 Expanded(
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -66,10 +71,7 @@ class GradientSliverHeader extends StatelessWidget {
                     ],
                   ),
                 ),
-                if (trailing != null) ...[
-                  const SizedBox(width: 8),
-                  trailing!,
-                ],
+                if (trailing != null) ...[const SizedBox(width: 8), trailing!],
               ],
             ),
           ),

@@ -88,7 +88,7 @@ class ProfilePage extends StatelessWidget {
   ) async {
     try {
       final updatedUser = user.copyWith(notificationsEnabled: value);
-      await _userDbService.update(updatedUser.id, updatedUser);
+      await _userDbService.update(updatedUser.id!, updatedUser);
       if (context.mounted) {
         showSnackBar(context, 'Notification settings updated');
       }

@@ -41,7 +41,6 @@ class AppKeyValueRow extends StatelessWidget {
 
     return RichText(
       text: TextSpan(
-        style: base.copyWith(height: 1.25),
         children: [
           TextSpan(
             text: '$k: ',

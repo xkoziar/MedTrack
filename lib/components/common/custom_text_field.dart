@@ -6,6 +6,7 @@ class CustomTextField extends StatelessWidget {
   final bool obscure;
   final TextEditingController controller;
   final String? Function(String?)? validator;
+  final int? maxLines;
 
   const CustomTextField({
     super.key,
@@ -14,6 +15,7 @@ class CustomTextField extends StatelessWidget {
     this.obscure = false,
     required this.controller,
     this.validator,
+    this.maxLines = 1,
   });
 
   @override
@@ -29,6 +31,7 @@ class CustomTextField extends StatelessWidget {
         ),
       ),
       validator: validator,
+      maxLines: maxLines,
     );
   }
 }
