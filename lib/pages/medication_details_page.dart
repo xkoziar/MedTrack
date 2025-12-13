@@ -8,27 +8,54 @@ import 'package:med_track/components/medication/dose_history_card.dart';
 import 'package:med_track/components/medication/medication_info_card.dart';
 import 'package:med_track/database/model/dose_event.dart';
 import 'package:med_track/database/model/medication.dart';
+import 'package:med_track/pages/add_medication_page.dart';
 import 'package:med_track/utils/constants.dart';
 
+import '../database/ioc/ioc_container.dart';
+import '../database/service/medication_database_service.dart';
 import '../utils/helpers/medication_scheduling.dart';
+import '../utils/snackbar_utils.dart';
 
 class MedicationDetailPage extends StatelessWidget {
   final Medication medication;
   final List<DoseEvent> recentEvents;
   final String? nfcTagId;
-  final VoidCallback? onEdit;
-  final VoidCallback? onDelete;
   final VoidCallback? onPairNfc;
+  final _medicationService = get<MedicationDatabaseService>();
 
-  const MedicationDetailPage({
+  MedicationDetailPage({
     super.key,
     required this.medication,
     required this.recentEvents,
     this.nfcTagId,
-    this.onEdit,
-    this.onDelete,
     this.onPairNfc,
   });
+
+  Future<void> _handleDelete(BuildContext context) async {
+    final confirmed = await _showDeleteDialog(context, medication.name);
+    if (!confirmed) return;
+
+    try {
+      await _medicationService.delete(medication.id);
+
+      if (!context.mounted) return;
+
+      Navigator.of(context).pop();
+
+      showSnackBar(context, 'Medication "${medication.name}" deleted.');
+    } catch (e) {
+      if (!context.mounted) return;
+      showSnackBar(context, 'Error deleting medication: $e');
+    }
+  }
+
+  void _handleEdit(BuildContext context) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (ctx) => AddMedicationPage(medication: medication),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -73,17 +100,13 @@ class MedicationDetailPage extends StatelessWidget {
                     children: [
                       PrimaryGradientButton(
                         label: 'Edit',
-                        onPressed: onEdit ?? () {},
+                        onPressed: () => _handleEdit(context),
                       ),
                       const SizedBox(height: AppSpacing.md),
                       SecondaryOutlineButton(
                         label: 'Delete',
                         danger: true,
-                        onPressed: () async {
-                          final name = medication.name;
-                          await _showDeleteDialog(context, name);
-                          onDelete?.call();
-                        },
+                        onPressed: () => _handleDelete(context),
                       ),
                     ],
                   ),
@@ -97,15 +120,12 @@ class MedicationDetailPage extends StatelessWidget {
     );
   }
 
-  static Future<void> _showDeleteDialog(
-    BuildContext context,
-    String name,
-  ) async {
+  Future<bool> _showDeleteDialog(BuildContext context, String name) async {
     final ok = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('Delete medication?'),
-        content: Text('This will remove "$name" and its schedule.'),
+        content: Text('This will remove "$name" and its schedule'),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
@@ -123,10 +143,6 @@ class MedicationDetailPage extends StatelessWidget {
       ),
     );
 
-    if (ok == true && context.mounted) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('TODO: Delete confirmed')));
-    }
+    return ok == true;
   }
 }
