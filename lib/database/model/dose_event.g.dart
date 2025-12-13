@@ -7,7 +7,7 @@ part of 'dose_event.dart';
 // **************************************************************************
 
 DoseEvent _$DoseEventFromJson(Map<String, dynamic> json) => DoseEvent(
-  id: json['id'] as String,
+  id: json['id'] as String?,
   userId: json['userId'] as String,
   medicationId: json['medicationId'] as String,
   scheduledAt: DateTime.parse(json['scheduledAt'] as String),
@@ -15,7 +15,6 @@ DoseEvent _$DoseEventFromJson(Map<String, dynamic> json) => DoseEvent(
       ? null
       : DateTime.parse(json['takenAt'] as String),
   status: $enumDecode(_$DoseStatusEnumMap, json['status']),
-  createdAt: DateTime.parse(json['createdAt'] as String),
 );
 
 Map<String, dynamic> _$DoseEventToJson(DoseEvent instance) => <String, dynamic>{
@@ -25,7 +24,6 @@ Map<String, dynamic> _$DoseEventToJson(DoseEvent instance) => <String, dynamic>{
   'scheduledAt': instance.scheduledAt.toIso8601String(),
   'takenAt': instance.takenAt?.toIso8601String(),
   'status': _$DoseStatusEnumMap[instance.status]!,
-  'createdAt': instance.createdAt.toIso8601String(),
 };
 
 const _$DoseStatusEnumMap = {

@@ -6,7 +6,7 @@ class MedicationDatabaseService extends FirestoreRepository<Medication> {
   MedicationDatabaseService()
     : super(
         collectionPath: 'medications',
-        fromJson: (json, id) => Medication.fromJson(json),
+        fromJson: (json, id) => Medication.fromJson(json, id: id),
         toJson: (medication) => medication.toJson(),
       );
 
@@ -20,6 +20,20 @@ class MedicationDatabaseService extends FirestoreRepository<Medication> {
         .where('userId', isEqualTo: userId)
         .get();
 
-    return query.docs.map((doc) => Medication.fromJson(doc.data())).toList();
+    return query.docs
+        .map((doc) => Medication.fromJson(doc.data(), id: doc.id))
+        .toList();
+  }
+
+  Stream<List<Medication>> observeUserMedications(String userId) {
+    return FirebaseFirestore.instance
+        .collection('medications')
+        .where('userId', isEqualTo: userId)
+        .snapshots()
+        .map(
+          (snapshot) => snapshot.docs
+              .map((doc) => Medication.fromJson(doc.data(), id: doc.id))
+              .toList(),
+        );
   }
 }

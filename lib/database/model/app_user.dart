@@ -1,10 +1,12 @@
 import 'package:json_annotation/json_annotation.dart';
+import 'package:med_track/database/model/entity.dart';
 
 part 'app_user.g.dart';
 
 @JsonSerializable()
-class AppUser {
-  final String id;
+class AppUser implements IEntity {
+  @override
+  final String? id;
   final String email;
   final String name;
   final bool notificationsEnabled;

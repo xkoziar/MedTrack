@@ -7,7 +7,7 @@ part of 'app_user.dart';
 // **************************************************************************
 
 AppUser _$AppUserFromJson(Map<String, dynamic> json) => AppUser(
-  id: json['id'] as String,
+  id: json['id'] as String?,
   email: json['email'] as String,
   name: json['name'] as String,
   notificationsEnabled: json['notificationsEnabled'] as bool? ?? true,
