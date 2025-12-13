@@ -2,9 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:med_track/database/ioc/ioc_container.dart';
 import 'package:med_track/database/service/auth_service.dart';
 import 'package:med_track/database/service/user_database_service.dart';
-import 'package:med_track/database/service/medication_database_service.dart';
 import 'package:med_track/database/model/medication.dart';
-import 'package:med_track/database/dev_data_helper.dart';
 import 'package:med_track/utils/constants.dart';
 import 'package:intl/intl.dart';
 
@@ -22,11 +20,9 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   final AuthService _authService = get<AuthService>();
   final UserDatabaseService _userDbService = get<UserDatabaseService>();
-  final MedicationDatabaseService _medicationDbService =
-      get<MedicationDatabaseService>();
 
   String _userName = '';
-  bool _isLoading = true;
+  bool _isLoading = false;
   final List<Medication> _medications = [];
   final Set<String> _takenMedications = {};
 
@@ -47,8 +43,7 @@ class _HomePageState extends State<HomePage> {
     final userId = _authService.user?.uid;
     if (userId != null) {
       final user = await _userDbService.get(userId);
-      final medications = await _medicationDbService.getUserMedications(userId);
-
+      final medications = <Medication>[];
       setState(() {
         _userName = user?.name ?? 'User';
         _medications.clear();
@@ -71,15 +66,16 @@ class _HomePageState extends State<HomePage> {
             'medicationId': med.id,
             'name': med.name,
             'dosage': med.dosage,
-            'time': timeFormat.format(time),
             'timeObject': time,
           });
         }
       }
     }
 
-    schedule.sort((a, b) =>
-        (a['timeObject'] as DateTime).compareTo(b['timeObject'] as DateTime));
+    schedule.sort(
+      (a, b) =>
+          (a['timeObject'] as DateTime).compareTo(b['timeObject'] as DateTime),
+    );
     return schedule;
   }
 
@@ -97,7 +93,6 @@ class _HomePageState extends State<HomePage> {
     final userId = _authService.user?.uid;
     if (userId != null) {
       setState(() => _isLoading = true);
-      await DevDataHelper.createSampleMedications(_medicationDbService, userId);
       await _loadData();
     }
   }
@@ -131,16 +126,10 @@ class _HomePageState extends State<HomePage> {
                 children: [
                   HomeHeader(userName: _userName),
                   const SizedBox(height: AppSpacing.xxl),
-                  Text(
-                    'Today\'s Schedule',
-                    style: AppTextStyles.heading3,
-                  ),
+                  Text('Today\'s Schedule', style: AppTextStyles.heading3),
                   const SizedBox(height: AppSpacing.lg),
                   todaySchedule.isEmpty
-                      ? const SizedBox(
-                          height: 300,
-                          child: EmptyState(),
-                        )
+                      ? const SizedBox(height: 300, child: EmptyState())
                       : ListView.builder(
                           shrinkWrap: true,
                           physics: const NeverScrollableScrollPhysics(),
@@ -150,8 +139,7 @@ class _HomePageState extends State<HomePage> {
                             final scheduleKey =
                                 '${item['medicationId']}_${item['time']}';
                             return MedicationItem(
-                              name:
-                                  '${item['name']} (${item['dosage']})',
+                              name: '${item['name']} (${item['dosage']})',
                               time: item['time'],
                               isTaken: _takenMedications.contains(scheduleKey),
                               onTap: () => _toggleMedication(scheduleKey),

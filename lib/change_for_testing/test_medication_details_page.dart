@@ -4,13 +4,13 @@
 //
 // import 'package:flutter/material.dart';
 // import 'package:med_track/pages/home_page.dart';
+// import 'package:med_track/pages/medication_page.dart';
 // import 'package:med_track/pages/profile_page.dart';
 //
 // import 'package:med_track/pages/medication_details_page.dart';
 //
 // import 'database/model/dose_event.dart';
 // import 'database/model/medication.dart';
-//
 //
 // class AppShell extends StatefulWidget {
 //   const AppShell({super.key});
@@ -51,19 +51,29 @@
 //         id: 'e1',
 //         userId: 'user_test_1',
 //         medicationId: 'med_test_1',
-//         scheduledAt: DateTime(now.year, now.month, now.day).subtract(const Duration(days: 2, hours: -8)),
-//         takenAt: DateTime(now.year, now.month, now.day).subtract(const Duration(days: 2, hours: -8, minutes: -6)),
+//         scheduledAt: DateTime(
+//           now.year,
+//           now.month,
+//           now.day,
+//         ).subtract(const Duration(days: 2, hours: -8)),
+//         takenAt: DateTime(
+//           now.year,
+//           now.month,
+//           now.day,
+//         ).subtract(const Duration(days: 2, hours: -8, minutes: -6)),
 //         status: DoseStatus.taken,
-//         createdAt: now.subtract(const Duration(days: 2)),
 //       ),
 //       DoseEvent(
 //         id: 'e2',
 //         userId: 'user_test_1',
 //         medicationId: 'med_test_1',
-//         scheduledAt: DateTime(now.year, now.month, now.day).subtract(const Duration(days: 1, hours: -20)),
+//         scheduledAt: DateTime(
+//           now.year,
+//           now.month,
+//           now.day,
+//         ).subtract(const Duration(days: 1, hours: -20)),
 //         takenAt: null,
 //         status: DoseStatus.missed,
-//         createdAt: now.subtract(const Duration(days: 1)),
 //       ),
 //       DoseEvent(
 //         id: 'e3',
@@ -72,7 +82,6 @@
 //         scheduledAt: DateTime(now.year, now.month, now.day, 8, 0),
 //         takenAt: DateTime(now.year, now.month, now.day, 8, 7),
 //         status: DoseStatus.taken,
-//         createdAt: now,
 //       ),
 //       DoseEvent(
 //         id: 'e4',
@@ -81,32 +90,22 @@
 //         scheduledAt: DateTime(now.year, now.month, now.day, 20, 0),
 //         takenAt: null,
 //         status: DoseStatus.pending,
-//         createdAt: now,
 //       ),
 //     ];
 //   }
 //
 //   List<Widget> get _pages => [
+//     MedicationPage(),
 //     const HomePage(),
 //     ProfilePage(),
 //     MedicationDetailPage(
 //       medication: _mockMedication,
 //       recentEvents: _mockEvents,
-//       nfcTagId: '04:A2:7F:19:CC:2B:80', // optional test value
-//       onEdit: () {
-//         ScaffoldMessenger.of(context).showSnackBar(
-//           const SnackBar(content: Text('TODO: Edit medication')),
-//         );
-//       },
-//       onDelete: () {
-//         ScaffoldMessenger.of(context).showSnackBar(
-//           const SnackBar(content: Text('TODO: Delete medication')),
-//         );
-//       },
+//       nfcTagId: '04:A2:7F:19:CC:2B:80',
 //       onPairNfc: () {
-//         ScaffoldMessenger.of(context).showSnackBar(
-//           const SnackBar(content: Text('TODO: Pair NFC')),
-//         );
+//         ScaffoldMessenger.of(
+//           context,
+//         ).showSnackBar(const SnackBar(content: Text('TODO: Pair NFC')));
 //       },
 //     ),
 //   ];
@@ -118,15 +117,15 @@
 //       bottomNavigationBar: BottomNavigationBar(
 //         currentIndex: _index,
 //         onTap: (i) => setState(() => _index = i),
+//
+//         type: BottomNavigationBarType.fixed,
 //         items: const [
 //           BottomNavigationBarItem(
-//             icon: Icon(Icons.home),
-//             label: "Home",
+//             icon: Icon(Icons.list_rounded),
+//             label: "MedList",
 //           ),
-//           BottomNavigationBarItem(
-//             icon: Icon(Icons.person),
-//             label: "Profile",
-//           ),
+//           BottomNavigationBarItem(icon: Icon(Icons.home), label: "Home"),
+//           BottomNavigationBarItem(icon: Icon(Icons.person), label: "Profile"),
 //           BottomNavigationBarItem(
 //             icon: Icon(Icons.medication),
 //             label: "Medication",
@@ -136,3 +135,4 @@
 //     );
 //   }
 // }
+
