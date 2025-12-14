@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:med_track/components/common/buttons/secondary_button.dart';
 import '../../utils/constants.dart';
 
 class DangerZoneCard extends StatelessWidget {
@@ -17,12 +18,15 @@ class DangerZoneCard extends StatelessWidget {
       child: Padding(
         padding: AppPadding.card,
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Row(
               children: [
-                Icon(Icons.warning,
-                    color: AppColors.danger, size: AppSpacing.iconSm),
+                Icon(
+                  Icons.warning,
+                  color: AppColors.danger,
+                  size: AppSpacing.iconSm,
+                ),
                 const SizedBox(width: AppSpacing.sm),
                 Text(
                   'Danger Zone',
@@ -35,19 +39,14 @@ class DangerZoneCard extends StatelessWidget {
             const SizedBox(height: AppSpacing.md),
             Text(
               'Once you delete your account, there is no going back. Please be certain.',
-              style: AppTextStyles.bodySmall.copyWith(
-                color: AppColors.textTertiary,
-              ),
+              style: TextStyle(color: AppColors.textTertiary)
             ),
             const SizedBox(height: AppSpacing.md),
-            SizedBox(
-              width: double.infinity,
-              child: OutlinedButton.icon(
-                onPressed: onDelete,
-                icon: const Icon(Icons.delete_forever),
-                label: const Text('Delete Account'),
-                style: AppButtonStyles.dangerOutlinedButton,
-              ),
+            SecondaryOutlineButton(
+              label: 'Delete Account',
+              onPressed: onDelete,
+              danger: true,
+              icon: const Icon(Icons.delete_forever),
             ),
           ],
         ),
