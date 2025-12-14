@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../utils/constants.dart';
-import '../common/app_card.dart';
+import 'app_card.dart';
 
 class AdherenceRateCard extends StatelessWidget {
   final String rate;
