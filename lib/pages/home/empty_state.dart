@@ -2,7 +2,14 @@ import 'package:flutter/material.dart';
 import '../../utils/constants.dart';
 
 class EmptyState extends StatelessWidget {
-  const EmptyState({super.key});
+  final String? title;
+  final String? subtitle;
+
+  const EmptyState({
+    super.key,
+    this.title,
+    this.subtitle,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -10,24 +17,36 @@ class EmptyState extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(
-            Icons.medical_services_outlined,
-            size: 80,
-            color: Colors.grey[300],
+          Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: Colors.grey[100],
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              Icons.medical_services_outlined,
+              size: 60,
+              color: Colors.grey[400],
+            ),
           ),
           const SizedBox(height: AppSpacing.xl),
           Text(
-            'No medications scheduled',
+            title ?? 'No medications scheduled',
             style: AppTextStyles.heading3.copyWith(
               color: AppColors.textSecondary,
             ),
+            textAlign: TextAlign.center,
           ),
           const SizedBox(height: AppSpacing.sm),
-          Text(
-            'Add your first medication to get started',
-            style: TextStyle(
-              fontSize: 14,
-              color: AppColors.textSecondary,
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 32),
+            child: Text(
+              subtitle ?? 'Add your first medication to get started',
+              style: TextStyle(
+                fontSize: 14,
+                color: AppColors.textSecondary,
+              ),
+              textAlign: TextAlign.center,
             ),
           ),
         ],

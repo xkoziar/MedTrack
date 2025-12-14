@@ -90,26 +90,28 @@ class _AppShellState extends State<AppShell> {
     ];
   }
 
-  List<Widget> get _pages => [
-    MedicationPage(),
-    const HomePage(),
-    ProfilePage(),
-    MedicationDetailPage(
-      medication: _mockMedication,
-      recentEvents: _mockEvents,
-      nfcTagId: '04:A2:7F:19:CC:2B:80',
-      onPairNfc: () {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('TODO: Pair NFC')));
-      },
-    ),
-  ];
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: _pages[_index],
+      body: IndexedStack(
+        index: _index,
+        children: [
+          MedicationPage(key: const ValueKey('medication_page')),
+          const HomePage(key: ValueKey('home_page')),
+          ProfilePage(key: const ValueKey('profile_page')),
+          MedicationDetailPage(
+            key: const ValueKey('detail_page'),
+            medication: _mockMedication,
+            recentEvents: _mockEvents,
+            nfcTagId: '04:A2:7F:19:CC:2B:80',
+            onPairNfc: () {
+              ScaffoldMessenger.of(
+                context,
+              ).showSnackBar(const SnackBar(content: Text('TODO: Pair NFC')));
+            },
+          ),
+        ],
+      ),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _index,
         onTap: (i) => setState(() => _index = i),

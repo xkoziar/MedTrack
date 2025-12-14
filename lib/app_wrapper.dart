@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:med_track/database/ioc/ioc_container.dart';
 import 'package:med_track/database/service/auth_service.dart';
 import 'package:med_track/pages/auth_page.dart';
+import 'package:med_track/pages/add_medication_page.dart';
 import 'package:med_track/utils/constants.dart';
 
 import 'app_shell.dart';
@@ -14,15 +15,22 @@ class AppWrapper extends StatelessWidget {
     final authService = get<AuthService>();
 
     return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      routes: {
+        '/add-medication': (context) => const AddMedicationPage(),
+      },
       home: StreamBuilder(
         stream: authService.currentUserStream,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
+            return const Scaffold(
+              body: Center(child: CircularProgressIndicator()),
+            );
           }
 
           if (snapshot.hasData) {
-            return const AppShell();
+            // Use a key to force rebuild when user changes
+            return AppShell(key: ValueKey(snapshot.data?.id));
           }
 
           return const AuthPage();

@@ -42,6 +42,11 @@ class HomeHeader extends StatelessWidget {
     final months = ['January', 'February', 'March', 'April', 'May', 'June',
                     'July', 'August', 'September', 'October', 'November', 'December'];
 
-    return '${days[date.weekday - 1]}, ${months[date.month - 1]} ${date.day}';
+    final day = days[date.weekday - 1];
+    final month = months[date.month - 1];
+    final dayNum = date.day;
+    final year = date.year;
+
+    return '$day, $month $dayNum, $year';
   }
 }
