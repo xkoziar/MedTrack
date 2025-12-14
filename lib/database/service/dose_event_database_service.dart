@@ -4,11 +4,11 @@ import '../repository/firestore_repository.dart';
 
 class DoseEventDatabaseService extends FirestoreRepository<DoseEvent> {
   DoseEventDatabaseService()
-      : super(
-    collectionPath: 'dose_events',
-    fromJson: (json, id) => DoseEvent.fromJson(json, id: id),
-    toJson: (doseEvent) => doseEvent.toJson(),
-  );
+    : super(
+        collectionPath: 'dose_events',
+        fromJson: (json, id) => DoseEvent.fromJson(json, id: id),
+        toJson: (doseEvent) => doseEvent.toJson(),
+      );
 
   // ----------------------------------------------
   // CUSTOM METHODS → specific to DoseEvent entity
@@ -21,21 +21,21 @@ class DoseEventDatabaseService extends FirestoreRepository<DoseEvent> {
         .snapshots()
         .map(
           (snapshot) => snapshot.docs
-          .map((doc) => DoseEvent.fromJson(doc.data(), id: doc.id))
-          .toList(),
-    );
+              .map((doc) => DoseEvent.fromJson(doc.data(), id: doc.id))
+              .toList(),
+        );
   }
 
-  Stream<List<DoseEvent>> observeDoseEventsForMedication(
-      String medicationId) {
+  Stream<List<DoseEvent>> observeDoseEventsForMedication(String medicationId) {
     return FirebaseFirestore.instance
         .collection('dose_events')
         .where('medicationId', isEqualTo: medicationId)
+        .orderBy('scheduledAt', descending: true)
         .snapshots()
         .map(
           (snapshot) => snapshot.docs
-          .map((doc) => DoseEvent.fromJson(doc.data(), id: doc.id))
-          .toList(),
-    );
+              .map((doc) => DoseEvent.fromJson(doc.data(), id: doc.id))
+              .toList(),
+        );
   }
 }
