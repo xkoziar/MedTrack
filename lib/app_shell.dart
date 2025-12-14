@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:med_track/pages/history_page.dart';
 import 'package:med_track/pages/home_page.dart';
 import 'package:med_track/pages/medication_page.dart';
 import 'package:med_track/pages/profile_page.dart';
 
 import 'package:med_track/pages/medication_details_page.dart';
+import 'package:med_track/utils/helpers/create_mock_data.dart';
 
 import 'database/model/dose_event.dart';
 import 'database/model/medication.dart';
@@ -27,6 +29,7 @@ class _AppShellState extends State<AppShell> {
 
     final now = DateTime.now();
 
+    //createMockData(); <--- uprav user id
     _mockMedication = Medication(
       id: 'med_test_1',
       userId: 'user_test_1',
@@ -91,9 +94,10 @@ class _AppShellState extends State<AppShell> {
   }
 
   List<Widget> get _pages => [
+    HistoryPage(),
+    ProfilePage(),
     MedicationPage(),
     const HomePage(),
-    ProfilePage(),
     MedicationDetailPage(
       medication: _mockMedication,
       recentEvents: _mockEvents,
@@ -117,11 +121,15 @@ class _AppShellState extends State<AppShell> {
         type: BottomNavigationBarType.fixed,
         items: const [
           BottomNavigationBarItem(
+            icon: Icon(Icons.history_rounded),
+            label: "History",
+          ),
+          BottomNavigationBarItem(icon: Icon(Icons.person), label: "Profile"),
+          BottomNavigationBarItem(
             icon: Icon(Icons.list_rounded),
             label: "MedList",
           ),
           BottomNavigationBarItem(icon: Icon(Icons.home), label: "Home"),
-          BottomNavigationBarItem(icon: Icon(Icons.person), label: "Profile"),
           BottomNavigationBarItem(
             icon: Icon(Icons.medication),
             label: "Medication",

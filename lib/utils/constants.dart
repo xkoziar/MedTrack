@@ -119,3 +119,8 @@ class AppGradients {
     colors: [Color(0xFF11998E), Color(0xFF38EF7D)],
   );
 }
+
+class MedAdherence {
+  static const days7 = 7;
+  static const days30 = 30;
+}
