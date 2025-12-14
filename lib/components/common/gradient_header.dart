@@ -19,7 +19,7 @@ class GradientSliverHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     return SliverAppBar(
       pinned: true,
-      toolbarHeight: 85,
+      toolbarHeight: 90,
       expandedHeight: 100,
       automaticallyImplyLeading: false,
       backgroundColor: Colors.transparent,
@@ -54,18 +54,15 @@ class GradientSliverHeader extends StatelessWidget {
                         title,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
+                        style: AppTextStyles.heading2.copyWith(
                           color: Colors.white,
-                          fontSize: 22,
-                          fontWeight: FontWeight.w700,
                         ),
                       ),
                       const SizedBox(height: 4),
                       Text(
                         subtitle,
-                        style: const TextStyle(
+                        style: AppTextStyles.bodyMedium.copyWith(
                           color: Colors.white,
-                          fontSize: 15,
                         ),
                       ),
                     ],

@@ -6,7 +6,9 @@ class AppColors {
   static final Color textTertiary = Colors.grey[800]!;
   static final Color danger = Colors.red[700]!;
   static final Color dangerBackground = Colors.red[50]!;
-  static final Color dayPickerSelected = Colors.deepPurpleAccent.withValues(alpha: 0.2);
+  static final Color dayPickerSelected = Colors.deepPurpleAccent.withValues(
+    alpha: 0.2,
+  );
   static final Color dayPickerDefault = Colors.grey[900]!;
   static final Color success = Colors.green[600]!;
   static final Color successBackground = Colors.green[50]!;
@@ -50,6 +52,12 @@ class AppTextStyles {
   static TextStyle captionSecondary = TextStyle(
     fontSize: 12,
     color: AppColors.textSecondary,
+  );
+
+  static TextStyle adherenceRate = TextStyle(
+    fontSize: 48,
+    fontWeight: FontWeight.bold,
+    color: Colors.white,
   );
 }
 
