@@ -4,9 +4,6 @@ import 'package:med_track/pages/home_page.dart';
 import 'package:med_track/pages/medication_page.dart';
 import 'package:med_track/pages/profile_page.dart';
 
-import 'package:med_track/pages/medication_details_page.dart';
-import 'database/model/medication.dart';
-
 class AppShell extends StatefulWidget {
   const AppShell({super.key});
 
@@ -16,8 +13,6 @@ class AppShell extends StatefulWidget {
 
 class _AppShellState extends State<AppShell> {
   int _index = 0;
-
-  late final Medication _mockMedication;
 
   @override
   void initState() {
@@ -31,15 +26,6 @@ class _AppShellState extends State<AppShell> {
     ProfilePage(),
     MedicationPage(),
     const HomePage(),
-    MedicationDetailPage(
-      medication: _mockMedication,
-      nfcTagId: '04:A2:7F:19:CC:2B:80',
-      onPairNfc: () {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('TODO: Pair NFC')));
-      },
-    ),
   ];
 
   @override
@@ -62,10 +48,6 @@ class _AppShellState extends State<AppShell> {
             label: "MedList",
           ),
           BottomNavigationBarItem(icon: Icon(Icons.home), label: "Home"),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.medication),
-            label: "Medication",
-          ),
         ],
       ),
     );
