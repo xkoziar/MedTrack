@@ -5,36 +5,43 @@ class SecondaryOutlineButton extends StatelessWidget {
   final String label;
   final bool danger;
   final VoidCallback onPressed;
+  final Icon? icon;
 
   const SecondaryOutlineButton({
     super.key,
     required this.label,
     required this.onPressed,
     this.danger = false,
+    this.icon,
   });
 
   @override
   Widget build(BuildContext context) {
     final c = danger ? AppColors.danger : AppColors.primary;
 
-    return OutlinedButton(
-      onPressed: onPressed,
-      style: AppButtonStyles.primaryOutlinedButton.copyWith(
-        foregroundColor: WidgetStatePropertyAll<Color>(c),
-        side: WidgetStatePropertyAll<BorderSide>(
-          BorderSide(color: c, width: 2),
-        ),
-        // TODO: nevhapem preco ten shape nejde dat do AppButtonStyles.primaryOutlinedButton
-        shape: WidgetStatePropertyAll<RoundedRectangleBorder>(
-        RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8),
-        ),
+    final buttonStyle = AppButtonStyles.primaryOutlinedButton.copyWith(
+      foregroundColor: WidgetStateProperty.all<Color>(c),
+      side: WidgetStateProperty.all<BorderSide>(
+        BorderSide(color: c, width: 2),
       ),
-      ),
-      child: Text(
-        label,
-        style: AppTextStyles.bodyMediumSemiBold,
+      shape: WidgetStateProperty.all<RoundedRectangleBorder>(
+        RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
       ),
     );
+
+    final textLabel = Text(label, style: AppTextStyles.bodyMediumSemiBold);
+
+    return icon != null
+        ? OutlinedButton.icon(
+            onPressed: onPressed,
+            style: buttonStyle,
+            icon: icon!,
+            label: textLabel,
+          )
+        : OutlinedButton(
+            onPressed: onPressed,
+            style: buttonStyle,
+            child: textLabel,
+          );
   }
 }

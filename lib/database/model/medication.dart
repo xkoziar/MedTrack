@@ -1,9 +1,13 @@
 import 'package:json_annotation/json_annotation.dart';
+import 'package:med_track/database/model/entity.dart';
+import 'package:uuid/uuid.dart';
 
 part 'medication.g.dart';
 
 @JsonSerializable()
-class Medication {
+class Medication implements IEntity {
+  @override
+  @JsonKey(includeFromJson: false, includeToJson: false)
   final String id;
   final String userId;
   final String name;
@@ -11,22 +15,14 @@ class Medication {
   final String dosage;
   final DateTime startDate;
   final DateTime? endDate;
-
-  /// Easy pause toggle
   final bool isActive;
-
-  /// ISO-8601 weekday numbers: 1=Mon ... 7=Sun
   final List<int> scheduleDays;
-
-  /// Times in day as "HH:mm" (timezone-safe)
   final List<String> scheduleTimes;
-
-  /// Optional metadata
   final DateTime createdAt;
   final DateTime updatedAt;
 
   Medication({
-    required this.id,
+    String? id,
     required this.userId,
     required this.name,
     this.description,
@@ -36,13 +32,25 @@ class Medication {
     required this.isActive,
     required this.scheduleDays,
     required this.scheduleTimes,
-    required this.createdAt,
-    required this.updatedAt,
-  });
+    DateTime? createdAt,
+    DateTime? updatedAt,
+  }) : id = id ?? const Uuid().v4(),
+       createdAt = createdAt ?? DateTime.now(),
+       updatedAt = updatedAt ?? DateTime.now(),
+       assert(
+         scheduleDays.every((d) => d >= 1 && d <= 7),
+         'scheduleDays must contain values between 1 and 7',
+       ),
+       assert(
+         endDate == null || !endDate.isBefore(startDate),
+         'endDate must be after startDate',
+       );
 
-
-  factory Medication.fromJson(Map<String, dynamic> json) =>
-      _$MedicationFromJson(json);
+  factory Medication.fromJson(Map<String, dynamic> json, {String? id}) {
+    final medication = _$MedicationFromJson(json);
+    // The 'id' from json is ignored, so we set it from the document ID.
+    return medication.copyWith(id: id);
+  }
 
   Map<String, dynamic> toJson() => _$MedicationToJson(this);
 

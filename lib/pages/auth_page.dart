@@ -73,7 +73,6 @@ class _AuthPageState extends State<AuthPage> {
         await _authService.updateUserName(username);
 
         await _userDbService.create(
-          credential.user!.uid,
           AppUser(id: credential.user!.uid, email: email, name: username),
         );
       }

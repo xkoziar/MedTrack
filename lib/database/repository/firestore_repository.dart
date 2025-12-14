@@ -1,11 +1,12 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:med_track/database/model/entity.dart';
 
 import 'repository.dart';
 
 typedef FromJson<T> = T Function(Map<String, dynamic> json, String id);
 typedef ToJson<T> = Map<String, dynamic> Function(T model);
 
-class FirestoreRepository<T> implements Repository<T> {
+class FirestoreRepository<T extends IEntity> implements Repository<T> {
   final CollectionReference<T> _ref;
   final ToJson<T> _toJson;
 
@@ -22,7 +23,9 @@ class FirestoreRepository<T> implements Repository<T> {
            );
 
   @override
-  Future<void> create(String id, T entity) async => _ref.doc(id).set(entity);
+  Future<void> create(T entity) {
+    return _ref.doc(entity.id).set(entity);
+  }
 
   @override
   Future<T?> get(String id) async {

@@ -29,6 +29,11 @@ class AppWrapper extends StatelessWidget {
         },
       ),
       theme: ThemeData(
+        textTheme: TextTheme(
+          bodyMedium: AppTextStyles.bodyMedium,
+          bodySmall: AppTextStyles.bodySmall,
+        ),
+
         elevatedButtonTheme: ElevatedButtonThemeData(
           style: ElevatedButton.styleFrom(
             textStyle: AppTextStyles.bodyMediumSemiBold,

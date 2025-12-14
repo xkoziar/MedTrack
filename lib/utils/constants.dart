@@ -6,6 +6,16 @@ class AppColors {
   static final Color textTertiary = Colors.grey[800]!;
   static final Color danger = Colors.red[700]!;
   static final Color dangerBackground = Colors.red[50]!;
+  static final Color dayPickerSelected = Colors.deepPurpleAccent.withValues(
+    alpha: 0.2,
+  );
+  static final Color dayPickerDefault = Colors.grey[900]!;
+  static final Color success = Colors.green[600]!;
+  static final Color successBackground = Colors.green[50]!;
+  static final Color warning = Colors.orange[700]!;
+  static final Color warningBackground = Colors.orange[50]!;
+  static final error = Colors.red[600]!;
+  static final errorBackground = Colors.red[50]!;
 }
 
 class AppTextStyles {
@@ -29,6 +39,8 @@ class AppTextStyles {
     fontWeight: FontWeight.w500,
   );
 
+  static const TextStyle bodyMedium = TextStyle(fontSize: 16);
+
   static const TextStyle bodySmall = TextStyle(fontSize: 14);
 
   static const TextStyle avatarLetter = TextStyle(
@@ -40,6 +52,12 @@ class AppTextStyles {
   static TextStyle captionSecondary = TextStyle(
     fontSize: 12,
     color: AppColors.textSecondary,
+  );
+
+  static TextStyle adherenceRate = TextStyle(
+    fontSize: 48,
+    fontWeight: FontWeight.bold,
+    color: Colors.white,
   );
 }
 
@@ -58,6 +76,7 @@ class AppSpacing {
 
 class AppPadding {
   static const EdgeInsets page = EdgeInsets.all(24);
+  static const double pageDouble = 24.0;
   static const EdgeInsets card = EdgeInsets.all(16);
 }
 
