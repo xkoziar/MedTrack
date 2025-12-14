@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../components/common/custom_text_field.dart';
+import '../../../utils/constants.dart';
 import '../../../utils/validators.dart';
 
 class DeleteAccountDialog extends StatefulWidget {
@@ -69,7 +70,10 @@ class _DeleteAccountDialogState extends State<DeleteAccountDialog> {
 
             navigator.pop();
           },
-          child: const Text("Delete"),
+          child: Text(
+            "Delete",
+            style: TextStyle(color: AppColors.errorBackground),
+          ),
         ),
       ],
     );
