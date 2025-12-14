@@ -10,10 +10,13 @@ import 'package:med_track/utils/constants.dart';
 import 'package:med_track/utils/handling_stream_builder.dart';
 
 import '../database/model/medication.dart';
+import '../database/service/auth_service.dart';
 import 'medication_details_page.dart';
 
 class MedicationPage extends StatelessWidget {
   final _medicationService = get<MedicationDatabaseService>();
+  final _authService = get<AuthService>();
+  late final _userId = _authService.user?.uid;
 
   MedicationPage({super.key});
 
@@ -49,10 +52,7 @@ class MedicationPage extends StatelessWidget {
                   Text('Active Medications', style: AppTextStyles.heading3),
                   const SizedBox(height: AppSpacing.md),
                   HandlingStreamBuilder<List<Medication>>(
-                    // TODO: Replace with actual authenticated user ID
-                    stream: _medicationService.observeUserMedications(
-                      'current_user',
-                    ),
+                    stream: _medicationService.observeUserMedications(_userId!),
                     builder: (medications) {
                       if (medications.isEmpty) {
                         return const AppCard(
@@ -80,8 +80,6 @@ class MedicationPage extends StatelessWidget {
                                 MaterialPageRoute(
                                   builder: (ctx) => MedicationDetailPage(
                                     medication: medication,
-                                    recentEvents:
-                                    const [], // TODO: Fetch events
                                   ),
                                 ),
                               );

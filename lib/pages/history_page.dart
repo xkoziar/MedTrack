@@ -29,10 +29,10 @@ class HistoryPage extends StatelessWidget {
 
     return Scaffold(
       body: HandlingStreamBuilder<List<DoseEvent>>(
-        stream: _doseEventDbService.observeUserDoseEvents(_userId!),
+        stream: _doseEventDbService.observeUserDoseEvents(_userId),
         builder: (events) {
           return HandlingStreamBuilder<List<Medication>>(
-            stream: _medicationDbService.observeUserMedications(_userId!),
+            stream: _medicationDbService.observeUserMedications(_userId),
             builder: (medications) {
               final medicationMap = {for (var m in medications) m.id: m};
               final groupedEvents = _groupEventsByDay(events);
@@ -51,7 +51,7 @@ class HistoryPage extends StatelessWidget {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
-                          AdherenceRateProviderCard(userId: _userId!),
+                          AdherenceRateProviderCard(userId: _userId),
                           const SizedBox(height: AppSpacing.xl),
                           ...sortedDates.map((date) {
                             final dayEvents = groupedEvents[date]!;
