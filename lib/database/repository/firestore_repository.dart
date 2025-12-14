@@ -7,7 +7,7 @@ typedef FromJson<T> = T Function(Map<String, dynamic> json, String id);
 typedef ToJson<T> = Map<String, dynamic> Function(T model);
 
 class FirestoreRepository<T extends IEntity> implements Repository<T> {
-  final CollectionReference<T> _ref;
+  final CollectionReference<T> ref;
   final ToJson<T> _toJson;
 
   FirestoreRepository({
@@ -15,7 +15,7 @@ class FirestoreRepository<T extends IEntity> implements Repository<T> {
     required T Function(Map<String, dynamic>, String) fromJson,
     required Map<String, dynamic> Function(T) toJson,
   }) : _toJson = toJson,
-       _ref = FirebaseFirestore.instance
+       ref = FirebaseFirestore.instance
            .collection(collectionPath)
            .withConverter<T>(
              fromFirestore: (snap, _) => fromJson(snap.data() ?? {}, snap.id),
@@ -24,27 +24,27 @@ class FirestoreRepository<T extends IEntity> implements Repository<T> {
 
   @override
   Future<void> create(T entity) {
-    return _ref.doc(entity.id).set(entity);
+    return ref.doc(entity.id).set(entity);
   }
 
   @override
   Future<T?> get(String id) async {
-    final snap = await _ref.doc(id).get();
+    final snap = await ref.doc(id).get();
     return snap.data();
   }
 
   @override
   Future<void> update(String id, T entity) async =>
-      _ref.doc(id).update(_toJson(entity));
+      ref.doc(id).update(_toJson(entity));
 
   @override
-  Future<void> delete(String id) async => _ref.doc(id).delete();
+  Future<void> delete(String id) async => ref.doc(id).delete();
 
   @override
   Stream<T?> observe(String id) =>
-      _ref.doc(id).snapshots().map((s) => s.data());
+      ref.doc(id).snapshots().map((s) => s.data());
 
   @override
   Stream<List<T>> observeAll() =>
-      _ref.snapshots().map((s) => s.docs.map((d) => d.data()).toList());
+      ref.snapshots().map((s) => s.docs.map((d) => d.data()).toList());
 }
