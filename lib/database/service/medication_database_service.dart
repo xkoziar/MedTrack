@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:med_track/database/service/dose_event_update_service.dart';
 import '../model/medication.dart';
 import '../repository/firestore_repository.dart';
 import 'dose_event_creating_service.dart';
@@ -47,12 +48,21 @@ class MedicationDatabaseService extends FirestoreRepository<Medication> {
   }
 
   @override
+  Future<void> update(String id, Medication entity) async {
+    await super.update(id, entity);
+
+    final doseEventUpdateService = DoseEventUpdateService();
+    await doseEventUpdateService.updateDoseEventsForMedication(entity);
+  }
+
+  @override
   Future<void> delete(String id) async {
     final db = FirebaseFirestore.instance;
     final batch = db.batch();
 
-    final doseEventsQuery =
-    db.collection('dose_events').where('medicationId', isEqualTo: id);
+    final doseEventsQuery = db
+        .collection('dose_events')
+        .where('medicationId', isEqualTo: id);
     final doseEventsSnapshot = await doseEventsQuery.get();
 
     for (final doc in doseEventsSnapshot.docs) {
