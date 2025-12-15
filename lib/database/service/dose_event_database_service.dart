@@ -147,7 +147,7 @@ class DoseEventDatabaseService extends FirestoreRepository<DoseEvent> {
       if (event.scheduledAt.isBefore(now)) {
         batch.update(doc.reference, {
           'status': DoseStatus.missed.name,
-          'updatedAt': FieldValue.serverTimestamp(),
+          // 'updatedAt': DateTime.now(),
         });
       }
     }
