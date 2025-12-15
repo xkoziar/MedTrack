@@ -92,10 +92,11 @@ class MedicationDetailPage extends StatelessWidget {
                   NfcPairCard(nfcTagId: nfcTagId, onPair: onPairNfc),
                   const SizedBox(height: AppSpacing.xl),
                   HandlingStreamBuilder<List<DoseEvent>>(
-                    stream: _doseEventService.observeDoseEventsForMedication(
-                      medication.id,
-                      limit: 7,
-                    ),
+                    stream: _doseEventService
+                        .observeMedicationEventsTodayAndEarlier(
+                          medication.id,
+                          limit: 7,
+                        ),
                     builder: (events) => DoseHistoryCard(events: events),
                   ),
                   const SizedBox(height: AppSpacing.xxl),

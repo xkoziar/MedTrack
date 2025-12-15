@@ -8,20 +8,29 @@ class DoseEventCreationService {
   /// Generates and saves [DoseEvent]s for a given [medication]
   /// for a specified number of days into the future.
   ///
+  /// An optional [startDate] can be provided to specify the time from which
+  /// to start creating events. If not provided, it defaults to `DateTime.now()`.
   /// It checks for existing events to prevent duplicates.
   Future<void> createDoseEventsForMedication(
-      Medication medication, {
-        int lookAheadDays = 7,
-      }) async {
+    Medication medication, {
+    int lookAheadDays = 7,
+    DateTime? startDate,
+  }) async {
     final batch = _db.batch();
     final doseEventsRef = _db.collection('dose_events');
-    final today = DateTime.now();
-    final todayDateOnly = DateTime(today.year, today.month, today.day);
+    final start = startDate ?? DateTime.now();
+    final startDateOnly = DateTime(start.year, start.month, start.day);
 
     for (int i = 0; i < lookAheadDays; i++) {
-      final date = todayDateOnly.add(Duration(days: i));
+      final date = startDateOnly.add(Duration(days: i));
 
-      if (date.isBefore(medication.startDate)) continue;
+      final medicationStartDateOnly = DateTime(
+        medication.startDate.year,
+        medication.startDate.month,
+        medication.startDate.day,
+      );
+      if (date.isBefore(medicationStartDateOnly)) continue;
+
       if (medication.endDate != null && date.isAfter(medication.endDate!)) {
         continue;
       }
@@ -38,6 +47,8 @@ class DoseEventCreationService {
             hour,
             minute,
           );
+
+          if (scheduledAt.isBefore(start)) continue;
 
           final existingEventQuery = await doseEventsRef
               .where('medicationId', isEqualTo: medication.id)

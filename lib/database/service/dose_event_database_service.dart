@@ -14,30 +14,34 @@ class DoseEventDatabaseService extends FirestoreRepository<DoseEvent> {
   // CUSTOM METHODS → specific to DoseEvent entity
   // ----------------------------------------------
 
-
-  Stream<List<DoseEvent>> observeDoseEventsForMedication(
+  Stream<List<DoseEvent>> observeMedicationEventsTodayAndEarlier(
     String medicationId, {
     int? limit,
   }) {
-    Query query = FirebaseFirestore.instance
+    final now = DateTime.now();
+    final endOfToday = DateTime(now.year, now.month, now.day, 23, 59, 59);
+
+    final query = FirebaseFirestore.instance
         .collection('dose_events')
-        .where('medicationId', isEqualTo: medicationId)
-        .orderBy('scheduledAt', descending: true);
+        .where('medicationId', isEqualTo: medicationId);
 
-    if (limit != null) {
-      query = query.limit(limit);
-    }
+    return query.snapshots().map((snapshot) {
+      final allEvents = snapshot.docs
+          .map((doc) => DoseEvent.fromJson(doc.data(), id: doc.id))
+          .toList();
 
-    return query.snapshots().map(
-      (snapshot) => snapshot.docs
-          .map(
-            (doc) => DoseEvent.fromJson(
-              doc.data() as Map<String, dynamic>,
-              id: doc.id,
-            ),
-          )
-          .toList(),
-    );
+      final pastAndTodayEvents = allEvents
+          .where((event) => !event.scheduledAt.isAfter(endOfToday))
+          .toList();
+
+      pastAndTodayEvents.sort((a, b) => b.scheduledAt.compareTo(a.scheduledAt));
+
+      if (limit != null && pastAndTodayEvents.length > limit) {
+        return pastAndTodayEvents.sublist(0, limit);
+      }
+
+      return pastAndTodayEvents;
+    });
   }
 
   Future<(List<DoseEvent>, DocumentSnapshot?)> getPaginatedUserDoseEvents(
@@ -70,7 +74,6 @@ class DoseEventDatabaseService extends FirestoreRepository<DoseEvent> {
     return (events, lastDoc);
   }
 
-
   Stream<List<DoseEvent>> observeUserDoseEvents(String userId) {
     return FirebaseFirestore.instance
         .collection('dose_events')
@@ -78,8 +81,77 @@ class DoseEventDatabaseService extends FirestoreRepository<DoseEvent> {
         .snapshots()
         .map(
           (snapshot) => snapshot.docs
-          .map((doc) => DoseEvent.fromJson(doc.data(), id: doc.id))
-          .toList(),
-    );
+              .map((doc) => DoseEvent.fromJson(doc.data(), id: doc.id))
+              .toList(),
+        );
+  }
+
+  Future<List<DoseEvent>> getUpcomingUserDoseEventsForMedication(
+    String userId,
+    String medicationId, {
+    DateTime? from,
+  }) async {
+    final start = from ?? DateTime.now();
+
+    final query = FirebaseFirestore.instance
+        .collection('dose_events')
+        .where('medicationId', isEqualTo: medicationId);
+
+    final snapshot = await query.get();
+
+    final allEvents = snapshot.docs
+        .map((doc) => DoseEvent.fromJson(doc.data(), id: doc.id))
+        .toList();
+
+    final upcomingEvents = allEvents
+        .where(
+          (event) =>
+              event.userId == userId && !event.scheduledAt.isBefore(start),
+        )
+        .toList();
+
+    upcomingEvents.sort((a, b) => a.scheduledAt.compareTo(b.scheduledAt));
+
+    return upcomingEvents;
+  }
+
+  Future<void> deleteListOfDoseEvents(List<DoseEvent> events) async {
+    final batch = FirebaseFirestore.instance.batch();
+    final doseEventsRef = FirebaseFirestore.instance.collection('dose_events');
+
+    for (final event in events) {
+      final docRef = doseEventsRef.doc(event.id);
+      batch.delete(docRef);
+    }
+
+    await batch.commit();
+  }
+
+  Future<void> updateDoseEventsStatusToMissed(String userId) async {
+    final now = DateTime.now();
+    final db = FirebaseFirestore.instance;
+
+    final query = db
+        .collection('dose_events')
+        .where('userId', isEqualTo: userId)
+        .where('status', isEqualTo: DoseStatus.pending.name);
+
+    final snapshot = await query.get();
+    if (snapshot.docs.isEmpty) {
+      return;
+    }
+
+    final batch = db.batch();
+    for (final doc in snapshot.docs) {
+      final event = DoseEvent.fromJson(doc.data(), id: doc.id);
+      if (event.scheduledAt.isBefore(now)) {
+        batch.update(doc.reference, {
+          'status': DoseStatus.missed.name,
+          'updatedAt': FieldValue.serverTimestamp(),
+        });
+      }
+    }
+
+    await batch.commit();
   }
 }
