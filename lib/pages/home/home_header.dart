@@ -14,17 +14,11 @@ class HomeHeader extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          '$greeting, $userName',
-          style: AppTextStyles.heading2,
-        ),
+        Text('$greeting, $userName', style: AppTextStyles.heading2),
         const SizedBox(height: AppSpacing.xs),
         Text(
           _formatDate(now),
-          style: TextStyle(
-            fontSize: 16,
-            color: AppColors.textSecondary,
-          ),
+          style: TextStyle(fontSize: 16, color: AppColors.textSecondary),
         ),
       ],
     );
@@ -38,10 +32,35 @@ class HomeHeader extends StatelessWidget {
   }
 
   String _formatDate(DateTime date) {
-    final days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
-    final months = ['January', 'February', 'March', 'April', 'May', 'June',
-                    'July', 'August', 'September', 'October', 'November', 'December'];
+    final days = [
+      'Monday',
+      'Tuesday',
+      'Wednesday',
+      'Thursday',
+      'Friday',
+      'Saturday',
+      'Sunday',
+    ];
+    final months = [
+      'January',
+      'February',
+      'March',
+      'April',
+      'May',
+      'June',
+      'July',
+      'August',
+      'September',
+      'October',
+      'November',
+      'December',
+    ];
 
-    return '${days[date.weekday - 1]}, ${months[date.month - 1]} ${date.day}';
+    final day = days[date.weekday - 1];
+    final month = months[date.month - 1];
+    final dayNum = date.day;
+    final year = date.year;
+
+    return '$day, $month $dayNum, $year';
   }
 }

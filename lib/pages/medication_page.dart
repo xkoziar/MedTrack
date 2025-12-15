@@ -4,6 +4,7 @@ import 'package:med_track/components/common/buttons/primary_button.dart';
 import 'package:med_track/components/common/gradient_header.dart';
 import 'package:med_track/components/medication/medication_short_info_card.dart';
 import 'package:med_track/database/ioc/ioc_container.dart';
+import 'package:med_track/database/service/auth_service.dart';
 import 'package:med_track/database/service/medication_database_service.dart';
 import 'package:med_track/pages/add_medication_page.dart';
 import 'package:med_track/utils/constants.dart';
@@ -14,6 +15,7 @@ import 'medication_details_page.dart';
 
 class MedicationPage extends StatelessWidget {
   final _medicationService = get<MedicationDatabaseService>();
+  final _authService = get<AuthService>();
 
   MedicationPage({super.key});
 
@@ -49,9 +51,8 @@ class MedicationPage extends StatelessWidget {
                   Text('Active Medications', style: AppTextStyles.heading3),
                   const SizedBox(height: AppSpacing.md),
                   HandlingStreamBuilder<List<Medication>>(
-                    // TODO: Replace with actual authenticated user ID
                     stream: _medicationService.observeUserMedications(
-                      'current_user',
+                      _authService.user?.uid ?? '',
                     ),
                     builder: (medications) {
                       if (medications.isEmpty) {
@@ -70,7 +71,7 @@ class MedicationPage extends StatelessWidget {
                         physics: const NeverScrollableScrollPhysics(),
                         itemCount: medications.length,
                         separatorBuilder: (_, __) =>
-                        const SizedBox(height: AppSpacing.md),
+                            const SizedBox(height: AppSpacing.md),
                         itemBuilder: (context, index) {
                           final medication = medications[index];
                           return MedicationShortInfoCard(
@@ -81,7 +82,7 @@ class MedicationPage extends StatelessWidget {
                                   builder: (ctx) => MedicationDetailPage(
                                     medication: medication,
                                     recentEvents:
-                                    const [], // TODO: Fetch events
+                                        const [], // TODO: Fetch events
                                   ),
                                 ),
                               );

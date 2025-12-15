@@ -1,10 +1,13 @@
 import 'package:json_annotation/json_annotation.dart';
 import 'package:uuid/uuid.dart';
+import 'package:med_track/database/model/entity.dart';
 
 part 'dose_event.g.dart';
 
 @JsonSerializable()
-class DoseEvent {
+class DoseEvent implements IEntity {
+  @override
+  @JsonKey(includeFromJson: false, includeToJson: false)
   final String id;
   final String userId;
   final String medicationId;
@@ -27,8 +30,17 @@ class DoseEvent {
          'takenAt must be provided if status is taken',
        );
 
-  factory DoseEvent.fromJson(Map<String, dynamic> json) =>
-      _$DoseEventFromJson(json);
+  factory DoseEvent.fromJson(Map<String, dynamic> json, {String? id}) {
+    final event = _$DoseEventFromJson(json);
+    return DoseEvent(
+      id: id,
+      userId: event.userId,
+      medicationId: event.medicationId,
+      scheduledAt: event.scheduledAt,
+      takenAt: event.takenAt,
+      status: event.status,
+    );
+  }
 
   Map<String, dynamic> toJson() => _$DoseEventToJson(this);
 }

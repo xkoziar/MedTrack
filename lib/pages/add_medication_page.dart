@@ -10,6 +10,7 @@ import 'package:med_track/database/ioc/ioc_container.dart';
 import 'package:med_track/database/model/medication.dart';
 import 'package:med_track/utils/constants.dart';
 
+import '../database/service/auth_service.dart';
 import '../database/service/medication_database_service.dart';
 import '../utils/snackbar_utils.dart';
 
@@ -28,6 +29,7 @@ class _AddMedicationPageState extends State<AddMedicationPage> {
   final _descriptionController = TextEditingController();
   final _dosageController = TextEditingController();
   final _medicationService = get<MedicationDatabaseService>();
+  final _authService = get<AuthService>();
 
   late bool _isEditMode;
   final Set<int> _selectedDays = {};
@@ -114,9 +116,13 @@ class _AddMedicationPageState extends State<AddMedicationPage> {
         );
         await _medicationService.update(medicationToSave.id, medicationToSave);
       } else {
+        final userId = _authService.user?.uid;
+        if (userId == null) {
+          throw Exception('User not authenticated');
+        }
+
         medicationToSave = Medication(
-          userId: 'current_user',
-          // TODO: Replace with actual user ID
+          userId: userId,
           name: _nameController.text.trim(),
           description: _descriptionController.text.trim(),
           dosage: _dosageController.text.trim(),

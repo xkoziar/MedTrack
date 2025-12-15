@@ -7,7 +7,6 @@ part of 'dose_event.dart';
 // **************************************************************************
 
 DoseEvent _$DoseEventFromJson(Map<String, dynamic> json) => DoseEvent(
-  id: json['id'] as String?,
   userId: json['userId'] as String,
   medicationId: json['medicationId'] as String,
   scheduledAt: DateTime.parse(json['scheduledAt'] as String),
@@ -18,7 +17,6 @@ DoseEvent _$DoseEventFromJson(Map<String, dynamic> json) => DoseEvent(
 );
 
 Map<String, dynamic> _$DoseEventToJson(DoseEvent instance) => <String, dynamic>{
-  'id': instance.id,
   'userId': instance.userId,
   'medicationId': instance.medicationId,
   'scheduledAt': instance.scheduledAt.toIso8601String(),

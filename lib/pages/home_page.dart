@@ -1,14 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:med_track/database/ioc/ioc_container.dart';
 import 'package:med_track/database/service/auth_service.dart';
-import 'package:med_track/database/service/user_database_service.dart';
+import 'package:med_track/database/service/medication_database_service.dart';
+import 'package:med_track/database/service/dose_event_database_service.dart';
 import 'package:med_track/database/model/medication.dart';
+import 'package:med_track/database/model/dose_event.dart';
 import 'package:med_track/utils/constants.dart';
-import 'package:intl/intl.dart';
+import 'package:med_track/utils/handling_stream_builder.dart';
+import 'package:med_track/components/common/gradient_header.dart';
 
-import 'home/home_header.dart';
-import 'home/medication_item.dart';
-import 'home/empty_state.dart';
+import 'home/stats_section.dart';
+import 'home/schedule_section.dart';
+import 'home/home_helpers.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -19,136 +22,151 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   final AuthService _authService = get<AuthService>();
-  final UserDatabaseService _userDbService = get<UserDatabaseService>();
+  final MedicationDatabaseService _medDbService =
+      get<MedicationDatabaseService>();
+  final DoseEventDatabaseService _doseEventService =
+      get<DoseEventDatabaseService>();
 
-  String _userName = '';
-  bool _isLoading = false;
-  final List<Medication> _medications = [];
-  final Set<String> _takenMedications = {};
-
-  @override
-  void dispose() {
-    _medications.clear();
-    _takenMedications.clear();
-    super.dispose();
-  }
+  String? _userId;
 
   @override
   void initState() {
     super.initState();
-    _loadData();
+    _initializeUser();
   }
 
-  Future<void> _loadData() async {
-    final userId = _authService.user?.uid;
-    if (userId != null) {
-      final user = await _userDbService.get(userId);
-      final medications = <Medication>[];
+  @override
+  void dispose() {
+    super.dispose();
+  }
+
+  Future<void> _initializeUser() async {
+    final firebaseUser = _authService.user;
+    if (firebaseUser != null && mounted) {
       setState(() {
-        _userName = user?.name ?? 'User';
-        _medications.clear();
-        _medications.addAll(medications);
-        _isLoading = false;
+        _userId = firebaseUser.uid;
       });
     }
   }
 
-  List<Map<String, dynamic>> _getTodaySchedule() {
-    final now = DateTime.now();
-    final currentWeekday = now.weekday;
-    final schedule = <Map<String, dynamic>>[];
-    final timeFormat = DateFormat('HH:mm');
-
-    for (final med in _medications) {
-      if (med.scheduleDays.contains(currentWeekday)) {
-        for (final time in med.scheduleTimes) {
-          schedule.add({
-            'medicationId': med.id,
-            'name': med.name,
-            'dosage': med.dosage,
-            'timeObject': time,
-          });
-        }
-      }
-    }
-
-    schedule.sort(
-      (a, b) =>
-          (a['timeObject'] as DateTime).compareTo(b['timeObject'] as DateTime),
-    );
-    return schedule;
+  Future<void> _refreshData() async {
+    if (!mounted) return;
+    setState(() {});
   }
 
-  void _toggleMedication(String medicationId) {
-    setState(() {
-      if (_takenMedications.contains(medicationId)) {
-        _takenMedications.remove(medicationId);
-      } else {
-        _takenMedications.add(medicationId);
+  Future<void> _toggleMedication(
+    String medicationId,
+    DateTime scheduledAt,
+    bool currentlyTaken,
+  ) async {
+    if (_userId == null) return;
+
+    try {
+      await _doseEventService.recordDose(
+        userId: _userId!,
+        medicationId: medicationId,
+        scheduledAt: scheduledAt,
+        taken: !currentlyTaken,
+      );
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error recording dose: $e')));
+      }
+    }
+  }
+
+  void _navigateToAddMedication() {
+    Navigator.pushNamed(context, '/add-medication').then((_) {
+      if (mounted) {
+        _refreshData();
       }
     });
   }
 
-  Future<void> _addSampleData() async {
-    final userId = _authService.user?.uid;
-    if (userId != null) {
-      setState(() => _isLoading = true);
-      await _loadData();
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
-    final todaySchedule = _getTodaySchedule();
+    if (_userId == null) {
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
+
+    final userName = _authService.user?.displayName ?? 'User';
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('MedTrack'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.science),
-            onPressed: _addSampleData,
-            tooltip: 'Add sample data (DEV)',
-          ),
-          IconButton(
-            icon: const Icon(Icons.add),
-            onPressed: () {},
-            tooltip: 'Add medication',
-          ),
-        ],
-      ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : SingleChildScrollView(
-              padding: AppPadding.page,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  HomeHeader(userName: _userName),
-                  const SizedBox(height: AppSpacing.xxl),
-                  Text('Today\'s Schedule', style: AppTextStyles.heading3),
-                  const SizedBox(height: AppSpacing.lg),
-                  todaySchedule.isEmpty
-                      ? const SizedBox(height: 300, child: EmptyState())
-                      : ListView.builder(
-                          shrinkWrap: true,
-                          physics: const NeverScrollableScrollPhysics(),
-                          itemCount: todaySchedule.length,
-                          itemBuilder: (context, index) {
-                            final item = todaySchedule[index];
-                            final scheduleKey =
-                                '${item['medicationId']}_${item['time']}';
-                            return MedicationItem(
-                              name: '${item['name']} (${item['dosage']})',
-                              time: item['time'],
-                              isTaken: _takenMedications.contains(scheduleKey),
-                              onTap: () => _toggleMedication(scheduleKey),
-                            );
-                          },
+      backgroundColor: Colors.grey[50],
+      body: HandlingStreamBuilder<List<Medication>>(
+        key: ValueKey('medications_$_userId'),
+        stream: _medDbService.observeUserMedications(_userId!),
+        builder: (medications) {
+          return HandlingStreamBuilder<List<DoseEvent>>(
+            key: ValueKey('dose_events_$_userId'),
+            stream: _doseEventService.observeTodayEvents(_userId!),
+            builder: (doseEvents) {
+              final todaySchedule = HomePageHelpers.getTodaySchedule(
+                medications,
+              );
+              final takenMedicationKeys =
+                  HomePageHelpers.getTakenMedicationKeys(doseEvents);
+              final takenCount = takenMedicationKeys.length;
+              final totalToday = HomePageHelpers.todayMedicationsCount(
+                medications,
+              );
+              final activeMedications = HomePageHelpers.activeMedicationsCount(
+                medications,
+              );
+
+              return RefreshIndicator(
+                onRefresh: _refreshData,
+                child: CustomScrollView(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  slivers: [
+                    GradientSliverHeader(
+                      title: 'Home',
+                      subtitle: 'Welcome back, $userName',
+                      trailing: IconButton(
+                        icon: const Icon(
+                          Icons.add_circle_outline,
+                          color: Colors.white,
                         ),
-                ],
-              ),
-            ),
+                        onPressed: _navigateToAddMedication,
+                        tooltip: 'Add medication',
+                      ),
+                    ),
+                    SliverToBoxAdapter(
+                      child: Padding(
+                        padding: AppPadding.page,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            StatsSection(
+                              takenCount: takenCount,
+                              totalToday: totalToday,
+                              activeMedicationsCount: activeMedications,
+                              totalMedications: medications.length,
+                            ),
+                            const SizedBox(height: AppSpacing.xxl),
+                            ScheduleSection(
+                              todaySchedule: todaySchedule,
+                              takenMedicationKeys: takenMedicationKeys,
+                              medications: medications,
+                              takenCount: takenCount,
+                              totalToday: totalToday,
+                              onToggleMedication: _toggleMedication,
+                              onAddMedication: _navigateToAddMedication,
+                            ),
+                            const SizedBox(height: AppSpacing.xl),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            },
+          );
+        },
+      ),
     );
   }
 }
