@@ -16,7 +16,11 @@ class AdherenceRateProviderCard extends StatelessWidget {
     super.key,
     required this.userId,
     this.periodInDays = MedAdherence.days30,
-  });
+  }) : assert(periodInDays > 0, 'periodInDays must be greater than 0'),
+       assert(
+         periodInDays <= 365,
+         'periodInDays must be less than or equal to 365',
+       );
 
   final _doseEventDbService = get<DoseEventDatabaseService>();
 

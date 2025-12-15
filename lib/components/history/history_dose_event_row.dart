@@ -19,6 +19,7 @@ class HistoryDoseEventRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final time = formatTimeHm(event.scheduledAt);
     final medicationName = medication?.name ?? 'Unknown Medication';
+    final medicationDose = medication?.dosage ?? '';
 
     return Container(
       padding: const EdgeInsets.all(14),
@@ -33,14 +34,14 @@ class HistoryDoseEventRow extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  medicationName,
+                  '$medicationName $medicationDose',
                   style: AppTextStyles.bodyMediumSemiBold,
                 ),
                 const SizedBox(height: AppSpacing.xs),
                 Text(
                   time,
                   style: TextStyle(
-                    fontSize: 13,
+                    fontSize: AppTextSizes.bodySmall,
                     color: AppColors.textSecondary,
                   ),
                 ),

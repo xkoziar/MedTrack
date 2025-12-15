@@ -18,6 +18,15 @@ class AppColors {
   static final errorBackground = Colors.red[50]!;
 }
 
+class AppTextSizes {
+  static const double heading1 = 32.0;
+  static const double heading2 = 24.0;
+  static const double heading3 = 18.0;
+  static const double bodyMedium = 16.0;
+  static const double bodySmall = 14.0;
+  static const double caption = 12.0;
+}
+
 class AppTextStyles {
   static const TextStyle heading1 = TextStyle(
     fontSize: 32,
