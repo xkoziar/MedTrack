@@ -35,10 +35,7 @@ class ScheduleSection extends StatelessWidget {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(
-              'Today\'s Schedule',
-              style: AppTextStyles.heading3,
-            ),
+            Text('Today\'s Schedule', style: AppTextStyles.heading3),
             if (todaySchedule.isNotEmpty)
               Text(
                 '${todaySchedule.length} dose${todaySchedule.length != 1 ? 's' : ''}',
@@ -130,7 +127,8 @@ class ScheduleSection extends StatelessWidget {
                 itemBuilder: (context, index) {
                   final item = todaySchedule[index];
                   final medicationId = item['medicationId'] as String;
-                  final medicationName = item['name'] as String? ?? 'Unknown Medication';
+                  final medicationName =
+                      item['name'] as String? ?? 'Unknown Medication';
                   final medicationDosage = item['dosage'] as String? ?? '';
                   final medicationTime = item['time'] as String? ?? '';
                   final scheduleTime = item['timeObject'] as DateTime;
@@ -141,11 +139,8 @@ class ScheduleSection extends StatelessWidget {
                     name: '$medicationName ($medicationDosage)',
                     time: medicationTime,
                     isTaken: isTaken,
-                    onTap: () => onToggleMedication(
-                      medicationId,
-                      scheduleTime,
-                      isTaken,
-                    ),
+                    onTap: () =>
+                        onToggleMedication(medicationId, scheduleTime, isTaken),
                   );
                 },
               ),

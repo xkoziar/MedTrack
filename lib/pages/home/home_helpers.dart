@@ -2,7 +2,9 @@ import 'package:med_track/database/model/medication.dart';
 import 'package:med_track/database/model/dose_event.dart';
 
 class HomePageHelpers {
-  static List<Map<String, dynamic>> getTodaySchedule(List<Medication> medications) {
+  static List<Map<String, dynamic>> getTodaySchedule(
+    List<Medication> medications,
+  ) {
     final now = DateTime.now();
     final currentWeekday = now.weekday;
     final schedule = <Map<String, dynamic>>[];
@@ -39,13 +41,11 @@ class HomePageHelpers {
   }
 
   static Set<String> getTakenMedicationKeys(List<DoseEvent> events) {
-    return events
-        .where((e) => e.status == DoseStatus.taken)
-        .map((e) {
-          final time = '${e.scheduledAt.hour.toString().padLeft(2, '0')}:${e.scheduledAt.minute.toString().padLeft(2, '0')}';
-          return '${e.medicationId}_$time';
-        })
-        .toSet();
+    return events.where((e) => e.status == DoseStatus.taken).map((e) {
+      final time =
+          '${e.scheduledAt.hour.toString().padLeft(2, '0')}:${e.scheduledAt.minute.toString().padLeft(2, '0')}';
+      return '${e.medicationId}_$time';
+    }).toSet();
   }
 
   static int todayMedicationsCount(List<Medication> medications) {

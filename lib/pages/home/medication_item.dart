@@ -24,9 +24,7 @@ class MedicationItem extends StatelessWidget {
         onTap: onTap,
         borderRadius: BorderRadius.circular(16),
         child: AppCard(
-          color: isTaken
-              ? AppColors.success.withOpacity(0.05)
-              : Colors.white,
+          color: isTaken ? AppColors.success.withOpacity(0.05) : Colors.white,
           child: Row(
             children: [
               Container(
@@ -35,7 +33,10 @@ class MedicationItem extends StatelessWidget {
                 decoration: BoxDecoration(
                   gradient: isTaken
                       ? LinearGradient(
-                          colors: [AppColors.success, AppColors.success.withOpacity(0.7)],
+                          colors: [
+                            AppColors.success,
+                            AppColors.success.withOpacity(0.7),
+                          ],
                         )
                       : null,
                   color: isTaken ? null : Colors.grey[100],
@@ -59,7 +60,9 @@ class MedicationItem extends StatelessWidget {
                       name,
                       style: AppTextStyles.bodyMediumSemiBold.copyWith(
                         decoration: isTaken ? TextDecoration.lineThrough : null,
-                        color: isTaken ? AppColors.textSecondary : Colors.black87,
+                        color: isTaken
+                            ? AppColors.textSecondary
+                            : Colors.black87,
                       ),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,

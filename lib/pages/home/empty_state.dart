@@ -5,11 +5,7 @@ class EmptyState extends StatelessWidget {
   final String? title;
   final String? subtitle;
 
-  const EmptyState({
-    super.key,
-    this.title,
-    this.subtitle,
-  });
+  const EmptyState({super.key, this.title, this.subtitle});
 
   @override
   Widget build(BuildContext context) {
@@ -42,10 +38,7 @@ class EmptyState extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 32),
             child: Text(
               subtitle ?? 'Add your first medication to get started',
-              style: TextStyle(
-                fontSize: 14,
-                color: AppColors.textSecondary,
-              ),
+              style: TextStyle(fontSize: 14, color: AppColors.textSecondary),
               textAlign: TextAlign.center,
             ),
           ),

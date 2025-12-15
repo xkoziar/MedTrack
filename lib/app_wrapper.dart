@@ -16,9 +16,7 @@ class AppWrapper extends StatelessWidget {
 
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      routes: {
-        '/add-medication': (context) => const AddMedicationPage(),
-      },
+      routes: {'/add-medication': (context) => const AddMedicationPage()},
       home: StreamBuilder(
         stream: authService.currentUserStream,
         builder: (context, snapshot) {

@@ -71,7 +71,7 @@ class MedicationPage extends StatelessWidget {
                         physics: const NeverScrollableScrollPhysics(),
                         itemCount: medications.length,
                         separatorBuilder: (_, __) =>
-                        const SizedBox(height: AppSpacing.md),
+                            const SizedBox(height: AppSpacing.md),
                         itemBuilder: (context, index) {
                           final medication = medications[index];
                           return MedicationShortInfoCard(
@@ -82,7 +82,7 @@ class MedicationPage extends StatelessWidget {
                                   builder: (ctx) => MedicationDetailPage(
                                     medication: medication,
                                     recentEvents:
-                                    const [], // TODO: Fetch events
+                                        const [], // TODO: Fetch events
                                   ),
                                 ),
                               );

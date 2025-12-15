@@ -4,11 +4,11 @@ import '../repository/firestore_repository.dart';
 
 class DoseEventDatabaseService extends FirestoreRepository<DoseEvent> {
   DoseEventDatabaseService()
-      : super(
-          collectionPath: 'dose_events',
-          fromJson: (json, id) => DoseEvent.fromJson(json),
-          toJson: (event) => event.toJson(),
-        );
+    : super(
+        collectionPath: 'dose_events',
+        fromJson: (json, id) => DoseEvent.fromJson(json),
+        toJson: (event) => event.toJson(),
+      );
 
   // Get dose events for a specific medication
   Future<List<DoseEvent>> getMedicationEvents(String medicationId) async {
@@ -37,9 +37,15 @@ class DoseEventDatabaseService extends FirestoreRepository<DoseEvent> {
     // Filter in memory to avoid needing a composite index
     return query.docs
         .map((doc) => DoseEvent.fromJson(doc.data(), id: doc.id))
-        .where((event) =>
-            event.scheduledAt.isAfter(startOfDay.subtract(const Duration(seconds: 1))) &&
-            event.scheduledAt.isBefore(endOfDay.add(const Duration(seconds: 1))))
+        .where(
+          (event) =>
+              event.scheduledAt.isAfter(
+                startOfDay.subtract(const Duration(seconds: 1)),
+              ) &&
+              event.scheduledAt.isBefore(
+                endOfDay.add(const Duration(seconds: 1)),
+              ),
+        )
         .toList();
   }
 
@@ -57,9 +63,15 @@ class DoseEventDatabaseService extends FirestoreRepository<DoseEvent> {
           // Filter in memory to avoid needing a composite index
           return snapshot.docs
               .map((doc) => DoseEvent.fromJson(doc.data(), id: doc.id))
-              .where((event) =>
-                  event.scheduledAt.isAfter(startOfDay.subtract(const Duration(seconds: 1))) &&
-                  event.scheduledAt.isBefore(endOfDay.add(const Duration(seconds: 1))))
+              .where(
+                (event) =>
+                    event.scheduledAt.isAfter(
+                      startOfDay.subtract(const Duration(seconds: 1)),
+                    ) &&
+                    event.scheduledAt.isBefore(
+                      endOfDay.add(const Duration(seconds: 1)),
+                    ),
+              )
               .toList();
         });
   }
@@ -78,13 +90,15 @@ class DoseEventDatabaseService extends FirestoreRepository<DoseEvent> {
     // Filter in memory to find matching event
     final events = query.docs
         .map((doc) => DoseEvent.fromJson(doc.data(), id: doc.id))
-        .where((event) =>
-            event.medicationId == medicationId &&
-            event.scheduledAt.year == scheduledAt.year &&
-            event.scheduledAt.month == scheduledAt.month &&
-            event.scheduledAt.day == scheduledAt.day &&
-            event.scheduledAt.hour == scheduledAt.hour &&
-            event.scheduledAt.minute == scheduledAt.minute)
+        .where(
+          (event) =>
+              event.medicationId == medicationId &&
+              event.scheduledAt.year == scheduledAt.year &&
+              event.scheduledAt.month == scheduledAt.month &&
+              event.scheduledAt.day == scheduledAt.day &&
+              event.scheduledAt.hour == scheduledAt.hour &&
+              event.scheduledAt.minute == scheduledAt.minute,
+        )
         .toList();
 
     return events.isEmpty ? null : events.first;

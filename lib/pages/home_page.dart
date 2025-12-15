@@ -22,8 +22,10 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   final AuthService _authService = get<AuthService>();
-  final MedicationDatabaseService _medDbService = get<MedicationDatabaseService>();
-  final DoseEventDatabaseService _doseEventService = get<DoseEventDatabaseService>();
+  final MedicationDatabaseService _medDbService =
+      get<MedicationDatabaseService>();
+  final DoseEventDatabaseService _doseEventService =
+      get<DoseEventDatabaseService>();
 
   String? _userId;
 
@@ -68,9 +70,9 @@ class _HomePageState extends State<HomePage> {
       );
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error recording dose: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error recording dose: $e')));
       }
     }
   }
@@ -86,9 +88,7 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     if (_userId == null) {
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      );
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
     final userName = _authService.user?.displayName ?? 'User';
@@ -103,11 +103,18 @@ class _HomePageState extends State<HomePage> {
             key: ValueKey('dose_events_$_userId'),
             stream: _doseEventService.observeTodayEvents(_userId!),
             builder: (doseEvents) {
-              final todaySchedule = HomePageHelpers.getTodaySchedule(medications);
-              final takenMedicationKeys = HomePageHelpers.getTakenMedicationKeys(doseEvents);
+              final todaySchedule = HomePageHelpers.getTodaySchedule(
+                medications,
+              );
+              final takenMedicationKeys =
+                  HomePageHelpers.getTakenMedicationKeys(doseEvents);
               final takenCount = takenMedicationKeys.length;
-              final totalToday = HomePageHelpers.todayMedicationsCount(medications);
-              final activeMedications = HomePageHelpers.activeMedicationsCount(medications);
+              final totalToday = HomePageHelpers.todayMedicationsCount(
+                medications,
+              );
+              final activeMedications = HomePageHelpers.activeMedicationsCount(
+                medications,
+              );
 
               return RefreshIndicator(
                 onRefresh: _refreshData,
@@ -118,7 +125,10 @@ class _HomePageState extends State<HomePage> {
                       title: 'Home',
                       subtitle: 'Welcome back, $userName',
                       trailing: IconButton(
-                        icon: const Icon(Icons.add_circle_outline, color: Colors.white),
+                        icon: const Icon(
+                          Icons.add_circle_outline,
+                          color: Colors.white,
+                        ),
                         onPressed: _navigateToAddMedication,
                         tooltip: 'Add medication',
                       ),

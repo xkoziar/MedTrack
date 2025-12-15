@@ -35,10 +35,7 @@ class QuickStatsCard extends StatelessWidget {
             child: Icon(icon, color: color, size: 24),
           ),
           const SizedBox(height: AppSpacing.md),
-          Text(
-            value,
-            style: AppTextStyles.heading2.copyWith(color: color),
-          ),
+          Text(value, style: AppTextStyles.heading2.copyWith(color: color)),
           const SizedBox(height: AppSpacing.xs),
           Text(
             title,
