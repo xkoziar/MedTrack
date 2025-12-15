@@ -94,6 +94,7 @@ class MedicationDetailPage extends StatelessWidget {
                   HandlingStreamBuilder<List<DoseEvent>>(
                     stream: _doseEventService.observeDoseEventsForMedication(
                       medication.id,
+                      limit: 7,
                     ),
                     builder: (events) => DoseHistoryCard(events: events),
                   ),
