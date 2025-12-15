@@ -10,23 +10,24 @@ import 'package:med_track/database/model/dose_event.dart';
 import 'package:med_track/database/model/medication.dart';
 import 'package:med_track/pages/add_medication_page.dart';
 import 'package:med_track/utils/constants.dart';
+import 'package:med_track/utils/handling_stream_builder.dart';
 
 import '../database/ioc/ioc_container.dart';
+import '../database/service/dose_event_database_service.dart';
 import '../database/service/medication_database_service.dart';
 import '../utils/helpers/medication_scheduling.dart';
 import '../utils/snackbar_utils.dart';
 
 class MedicationDetailPage extends StatelessWidget {
   final Medication medication;
-  final List<DoseEvent> recentEvents;
   final String? nfcTagId;
   final VoidCallback? onPairNfc;
   final _medicationService = get<MedicationDatabaseService>();
+  final _doseEventService = get<DoseEventDatabaseService>();
 
   MedicationDetailPage({
     super.key,
     required this.medication,
-    required this.recentEvents,
     this.nfcTagId,
     this.onPairNfc,
   });
@@ -59,9 +60,6 @@ class MedicationDetailPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final sortedEvents = [...recentEvents]
-      ..sort((a, b) => b.scheduledAt.compareTo(a.scheduledAt));
-
     final nextDose = computeNextScheduled(
       now: DateTime.now(),
       scheduleDays: medication.scheduleDays,
@@ -93,7 +91,14 @@ class MedicationDetailPage extends StatelessWidget {
                   const SizedBox(height: AppSpacing.xl),
                   NfcPairCard(nfcTagId: nfcTagId, onPair: onPairNfc),
                   const SizedBox(height: AppSpacing.xl),
-                  DoseHistoryCard(events: sortedEvents),
+                  HandlingStreamBuilder<List<DoseEvent>>(
+                    stream: _doseEventService
+                        .observeMedicationEventsTodayAndEarlier(
+                          medication.id,
+                          limit: 7,
+                        ),
+                    builder: (events) => DoseHistoryCard(events: events),
+                  ),
                   const SizedBox(height: AppSpacing.xxl),
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -131,12 +136,8 @@ class MedicationDetailPage extends StatelessWidget {
             onPressed: () => Navigator.of(ctx).pop(false),
             child: const Text('Cancel'),
           ),
-          FilledButton.tonal(
+          TextButton(
             onPressed: () => Navigator.of(ctx).pop(true),
-            style: FilledButton.styleFrom(
-              backgroundColor: AppColors.dangerBackground,
-              foregroundColor: AppColors.danger,
-            ),
             child: const Text('Delete'),
           ),
         ],

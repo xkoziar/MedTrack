@@ -35,6 +35,7 @@ class AppWrapper extends StatelessWidget {
         },
       ),
       theme: ThemeData(
+        scaffoldBackgroundColor: Colors.grey[100],
         textTheme: TextTheme(
           bodyMedium: AppTextStyles.bodyMedium,
           bodySmall: AppTextStyles.bodySmall,

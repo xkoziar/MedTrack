@@ -1,12 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:med_track/pages/history_page.dart';
 import 'package:med_track/pages/home_page.dart';
 import 'package:med_track/pages/medication_page.dart';
 import 'package:med_track/pages/profile_page.dart';
-
-import 'package:med_track/pages/medication_details_page.dart';
-
-import 'database/model/dose_event.dart';
-import 'database/model/medication.dart';
 
 class AppShell extends StatefulWidget {
   const AppShell({super.key});
@@ -18,76 +14,11 @@ class AppShell extends StatefulWidget {
 class _AppShellState extends State<AppShell> {
   int _index = 0;
 
-  late final Medication _mockMedication;
-  late final List<DoseEvent> _mockEvents;
-
   @override
   void initState() {
     super.initState();
 
-    final now = DateTime.now();
-
-    _mockMedication = Medication(
-      id: 'med_test_1',
-      userId: 'user_test_1',
-      name: 'Ibuprofen',
-      description: 'After meals. Don’t combine with alcohol.',
-      dosage: '200 mg',
-      startDate: now.subtract(const Duration(days: 10)),
-      endDate: null,
-      isActive: false,
-      scheduleDays: const [1, 2, 3, 4, 5, 6, 7],
-      scheduleTimes: const ['08:00', '20:00'],
-      createdAt: now.subtract(const Duration(days: 10)),
-      updatedAt: now,
-    );
-
-    _mockEvents = [
-      DoseEvent(
-        id: 'e1',
-        userId: 'user_test_1',
-        medicationId: 'med_test_1',
-        scheduledAt: DateTime(
-          now.year,
-          now.month,
-          now.day,
-        ).subtract(const Duration(days: 2, hours: -8)),
-        takenAt: DateTime(
-          now.year,
-          now.month,
-          now.day,
-        ).subtract(const Duration(days: 2, hours: -8, minutes: -6)),
-        status: DoseStatus.taken,
-      ),
-      DoseEvent(
-        id: 'e2',
-        userId: 'user_test_1',
-        medicationId: 'med_test_1',
-        scheduledAt: DateTime(
-          now.year,
-          now.month,
-          now.day,
-        ).subtract(const Duration(days: 1, hours: -20)),
-        takenAt: null,
-        status: DoseStatus.missed,
-      ),
-      DoseEvent(
-        id: 'e3',
-        userId: 'user_test_1',
-        medicationId: 'med_test_1',
-        scheduledAt: DateTime(now.year, now.month, now.day, 8, 0),
-        takenAt: DateTime(now.year, now.month, now.day, 8, 7),
-        status: DoseStatus.taken,
-      ),
-      DoseEvent(
-        id: 'e4',
-        userId: 'user_test_1',
-        medicationId: 'med_test_1',
-        scheduledAt: DateTime(now.year, now.month, now.day, 20, 0),
-        takenAt: null,
-        status: DoseStatus.pending,
-      ),
-    ];
+    //createMockData(); <--- uprav user id
   }
 
   @override
@@ -96,20 +27,10 @@ class _AppShellState extends State<AppShell> {
       body: IndexedStack(
         index: _index,
         children: [
-          MedicationPage(key: const ValueKey('medication_page')),
           const HomePage(key: ValueKey('home_page')),
+          HistoryPage(),
+          MedicationPage(key: const ValueKey('medication_page')),
           ProfilePage(key: const ValueKey('profile_page')),
-          MedicationDetailPage(
-            key: const ValueKey('detail_page'),
-            medication: _mockMedication,
-            recentEvents: _mockEvents,
-            nfcTagId: '04:A2:7F:19:CC:2B:80',
-            onPairNfc: () {
-              ScaffoldMessenger.of(
-                context,
-              ).showSnackBar(const SnackBar(content: Text('TODO: Pair NFC')));
-            },
-          ),
         ],
       ),
       bottomNavigationBar: BottomNavigationBar(
@@ -119,15 +40,15 @@ class _AppShellState extends State<AppShell> {
         type: BottomNavigationBarType.fixed,
         items: const [
           BottomNavigationBarItem(
+            icon: Icon(Icons.history_rounded),
+            label: "History",
+          ),
+          BottomNavigationBarItem(icon: Icon(Icons.person), label: "Profile"),
+          BottomNavigationBarItem(
             icon: Icon(Icons.list_rounded),
             label: "MedList",
           ),
           BottomNavigationBarItem(icon: Icon(Icons.home), label: "Home"),
-          BottomNavigationBarItem(icon: Icon(Icons.person), label: "Profile"),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.medication),
-            label: "Medication",
-          ),
         ],
       ),
     );

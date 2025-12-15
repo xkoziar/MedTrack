@@ -91,6 +91,18 @@ class _AddMedicationPageState extends State<AddMedicationPage> {
 
     setState(() => _isSaving = true);
 
+    final userId = _authService.user?.uid;
+    if (userId == null) {
+      if (mounted) {
+        showSnackBar(
+          context,
+          'Error: You must be logged in to save a medication.',
+        );
+      }
+      setState(() => _isSaving = false);
+      return;
+    }
+
     try {
       Medication medicationToSave;
       final scheduleTimes =

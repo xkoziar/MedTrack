@@ -1,27 +1,24 @@
 import 'package:flutter/material.dart';
-import 'package:med_track/components/common/gradient_header.dart';
-import 'package:med_track/components/profile/adherence_rate_card.dart';
-import 'package:med_track/components/profile/user_stats_card.dart';
+import 'package:med_track/components/profile/profile_content.dart';
 import 'package:med_track/database/ioc/ioc_container.dart';
+import 'package:med_track/database/model/dose_event.dart';
 import 'package:med_track/database/service/auth_service.dart';
+import 'package:med_track/database/service/dose_event_database_service.dart';
 import 'package:med_track/database/service/user_database_service.dart';
 import 'package:med_track/database/model/app_user.dart';
 
 import '../components/profile/dialogs/change_password_dialog.dart';
 import '../components/profile/dialogs/delete_account_dialog.dart';
-import '../components/profile/user_info_card.dart';
 import '../utils/constants.dart';
 import '../utils/handling_stream_builder.dart';
 import '../utils/snackbar_utils.dart';
-import '../components/profile/notification_settings_card.dart';
-import '../components/profile/profile_action_buttons.dart';
-import '../components/profile/danger_zone_card.dart';
 
 class ProfilePage extends StatelessWidget {
   ProfilePage({super.key});
 
   final _authService = get<AuthService>();
   final _userDbService = get<UserDatabaseService>();
+  final _doseEventDbService = get<DoseEventDatabaseService>();
   late final _userId = _authService.user?.uid;
 
   @override
@@ -50,48 +47,20 @@ class ProfilePage extends StatelessWidget {
             );
           }
 
-          return CustomScrollView(
-            slivers: [
-              GradientSliverHeader(
-                title: 'Profile',
-                subtitle: 'Settings and stats',
-              ),
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: AppPadding.page,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      UserInfoCard(name: user.name, email: user.email),
-                      const SizedBox(height: AppSpacing.sm),
-                      AdherenceRateCard(rate: '87%', period: '30 days'),
-                      const SizedBox(height: AppSpacing.xl),
-                      UserStatsCard(
-                        thisWeek: '92% (33/36 dávek)',
-                        thisMonth: '87% (104/120 dávek)',
-                        daysStreak: '5 dní bez vynechání',
-                      ),
-                      const SizedBox(height: AppSpacing.sm),
-                      NotificationSettingsCard(
-                        user: user,
-                        onToggle: (value) =>
-                            _onToggleNotifications(context, user, value),
-                      ),
-                      const SizedBox(height: AppSpacing.xl),
-                      ProfileActionButtons(
-                        onChangePassword: () =>
-                            _showChangePasswordDialog(context, user),
-                        onLogout: _authService.signOut,
-                      ),
-                      const SizedBox(height: AppSpacing.md),
-                      DangerZoneCard(
-                        onDelete: () => _showDeleteAccountDialog(context, user),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ],
+          return HandlingStreamBuilder<List<DoseEvent>>(
+            stream: _doseEventDbService.observeUserDoseEvents(user.id!),
+            builder: (events) {
+              return ProfileContent(
+                user: user,
+                events: events,
+                onLogout: _authService.signOut,
+                onChangePassword: () =>
+                    _showChangePasswordDialog(context, user),
+                onDeleteAccount: () => _showDeleteAccountDialog(context, user),
+                onToggleNotifications: (value) =>
+                    _onToggleNotifications(context, user, value),
+              );
+            },
           );
         },
       ),
