@@ -129,7 +129,7 @@ void createMockData() {
       medicationId: 'vitamin_d3',
       scheduledAt:
       now.subtract(const Duration(days: 2)).copyWith(hour: 12, minute: 0),
-      status: DoseStatus.skipped,
+      status: DoseStatus.taken,
     ),
     DoseEvent(
       userId: userId,

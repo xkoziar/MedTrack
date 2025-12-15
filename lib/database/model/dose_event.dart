@@ -64,4 +64,4 @@ class DoseEvent implements IEntity {
   }
 }
 
-enum DoseStatus { taken, missed, skipped, pending }
+enum DoseStatus { taken, missed, pending }

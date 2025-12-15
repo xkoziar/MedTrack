@@ -63,12 +63,6 @@ class DoseStatusChipConfig {
           backgroundColor: Color(0xFFF8D7DA),
           foregroundColor: Color(0xFF721C24),
         );
-      case DoseStatus.skipped:
-        return const DoseStatusChipConfig(
-          label: '⤼ Skipped',
-          backgroundColor: Color(0xFFE2E3E5),
-          foregroundColor: Color(0xFF383D41),
-        );
       case DoseStatus.pending:
         return const DoseStatusChipConfig(
           label: '⏳ Pending',

@@ -35,6 +35,5 @@ Map<String, dynamic> _$DoseEventToJson(DoseEvent instance) => <String, dynamic>{
 const _$DoseStatusEnumMap = {
   DoseStatus.taken: 'taken',
   DoseStatus.missed: 'missed',
-  DoseStatus.skipped: 'skipped',
   DoseStatus.pending: 'pending',
 };
