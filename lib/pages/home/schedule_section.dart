@@ -76,14 +76,14 @@ class ScheduleSection extends StatelessWidget {
               if (medications.isEmpty) ...[
                 const SizedBox(height: AppSpacing.xl),
                 AppCard(
-                  color: AppColors.primary.withOpacity(0.05),
+                  color: AppColors.primary.withAlpha(13),
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Container(
                         padding: const EdgeInsets.all(AppSpacing.md),
                         decoration: BoxDecoration(
-                          color: AppColors.primary.withOpacity(0.15),
+                          color: AppColors.primary.withAlpha(38),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Icon(
@@ -138,8 +138,8 @@ class ScheduleSection extends StatelessWidget {
                   final isTaken = takenMedicationKeys.contains(scheduleKey);
 
                   return MedicationItem(
-                    name: medicationName,
-                    time: '$medicationTime • $medicationDosage',
+                    name: '$medicationName ($medicationDosage)',
+                    time: medicationTime,
                     isTaken: isTaken,
                     onTap: () => onToggleMedication(
                       medicationId,
@@ -152,14 +152,14 @@ class ScheduleSection extends StatelessWidget {
               if (takenCount == totalToday && totalToday > 0) ...[
                 const SizedBox(height: AppSpacing.lg),
                 AppCard(
-                  color: AppColors.success.withOpacity(0.05),
+                  color: AppColors.success.withAlpha(13),
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Container(
                         padding: const EdgeInsets.all(AppSpacing.md),
                         decoration: BoxDecoration(
-                          color: AppColors.success.withOpacity(0.15),
+                          color: AppColors.success.withAlpha(38),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Icon(

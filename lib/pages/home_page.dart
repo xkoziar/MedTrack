@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:med_track/database/ioc/ioc_container.dart';
 import 'package:med_track/database/service/auth_service.dart';
-import 'package:med_track/database/service/user_database_service.dart';
 import 'package:med_track/database/service/medication_database_service.dart';
 import 'package:med_track/database/service/dose_event_database_service.dart';
 import 'package:med_track/database/model/medication.dart';
 import 'package:med_track/database/model/dose_event.dart';
 import 'package:med_track/utils/constants.dart';
+import 'package:med_track/utils/handling_stream_builder.dart';
 import 'package:med_track/components/common/gradient_header.dart';
 
 import 'home/stats_section.dart';
@@ -22,11 +22,9 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   final AuthService _authService = get<AuthService>();
-  final UserDatabaseService _userDbService = get<UserDatabaseService>();
   final MedicationDatabaseService _medDbService = get<MedicationDatabaseService>();
   final DoseEventDatabaseService _doseEventService = get<DoseEventDatabaseService>();
 
-  String _userName = '';
   String? _userId;
 
   @override
@@ -46,35 +44,12 @@ class _HomePageState extends State<HomePage> {
       setState(() {
         _userId = firebaseUser.uid;
       });
-      await _loadUserName();
-    }
-  }
-
-  Future<void> _loadUserName() async {
-    if (_userId == null || !mounted) return;
-
-    try {
-      final user = await _userDbService.get(_userId!);
-      if (mounted) {
-        setState(() {
-          _userName = user?.name ?? 'User';
-        });
-      }
-    } catch (e) {
-      if (mounted) {
-        setState(() {
-          _userName = 'User';
-        });
-      }
     }
   }
 
   Future<void> _refreshData() async {
     if (!mounted) return;
-    await _loadUserName();
-    if (mounted) {
-      setState(() {});
-    }
+    setState(() {});
   }
 
   Future<void> _toggleMedication(
@@ -116,82 +91,18 @@ class _HomePageState extends State<HomePage> {
       );
     }
 
+    final userName = _authService.user?.displayName ?? 'User';
+
     return Scaffold(
       backgroundColor: Colors.grey[50],
-      body: StreamBuilder<List<Medication>>(
+      body: HandlingStreamBuilder<List<Medication>>(
         key: ValueKey('medications_$_userId'),
         stream: _medDbService.observeUserMedications(_userId!),
-        builder: (context, medicationSnapshot) {
-          if (medicationSnapshot.connectionState == ConnectionState.waiting) {
-            return CustomScrollView(
-              slivers: [
-                GradientSliverHeader(
-                  title: 'Home',
-                  subtitle: 'Welcome back, $_userName',
-                ),
-                const SliverFillRemaining(
-                  child: Center(child: CircularProgressIndicator()),
-                ),
-              ],
-            );
-          }
-
-          if (medicationSnapshot.hasError) {
-            return CustomScrollView(
-              slivers: [
-                GradientSliverHeader(
-                  title: 'Home',
-                  subtitle: 'Welcome back, $_userName',
-                ),
-                SliverFillRemaining(
-                  child: Center(
-                    child: Padding(
-                      padding: AppPadding.page,
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          const Icon(Icons.error_outline, size: 64, color: Colors.red),
-                          const SizedBox(height: AppSpacing.xl),
-                          Text(
-                            'Error loading medications',
-                            style: AppTextStyles.heading3,
-                          ),
-                          const SizedBox(height: AppSpacing.md),
-                          Text(
-                            medicationSnapshot.error.toString(),
-                            textAlign: TextAlign.center,
-                            style: AppTextStyles.bodySmall,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            );
-          }
-
-          final medications = medicationSnapshot.data ?? [];
-
-          return StreamBuilder<List<DoseEvent>>(
+        builder: (medications) {
+          return HandlingStreamBuilder<List<DoseEvent>>(
             key: ValueKey('dose_events_$_userId'),
             stream: _doseEventService.observeTodayEvents(_userId!),
-            builder: (context, doseEventSnapshot) {
-              if (doseEventSnapshot.connectionState == ConnectionState.waiting) {
-                return CustomScrollView(
-                  slivers: [
-                    GradientSliverHeader(
-                      title: 'Home',
-                      subtitle: 'Welcome back, $_userName',
-                    ),
-                    const SliverFillRemaining(
-                      child: Center(child: CircularProgressIndicator()),
-                    ),
-                  ],
-                );
-              }
-
-              final doseEvents = doseEventSnapshot.data ?? [];
+            builder: (doseEvents) {
               final todaySchedule = HomePageHelpers.getTodaySchedule(medications);
               final takenMedicationKeys = HomePageHelpers.getTakenMedicationKeys(doseEvents);
               final takenCount = takenMedicationKeys.length;
@@ -205,7 +116,7 @@ class _HomePageState extends State<HomePage> {
                   slivers: [
                     GradientSliverHeader(
                       title: 'Home',
-                      subtitle: 'Welcome back, $_userName',
+                      subtitle: 'Welcome back, $userName',
                       trailing: IconButton(
                         icon: const Icon(Icons.add_circle_outline, color: Colors.white),
                         onPressed: _navigateToAddMedication,
