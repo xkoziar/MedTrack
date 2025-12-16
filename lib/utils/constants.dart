@@ -52,6 +52,11 @@ class AppTextStyles {
 
   static const TextStyle bodySmall = TextStyle(fontSize: 14);
 
+  static const TextStyle bodyBold = TextStyle(
+    fontSize: 16,
+    fontWeight: FontWeight.bold,
+  );
+
   static const TextStyle avatarLetter = TextStyle(
     fontSize: 40,
     fontWeight: FontWeight.bold,
@@ -81,6 +86,7 @@ class AppSpacing {
   static const double radiusMd = 12.0;
   static const double avatarRadius = 50.0;
   static const double iconSm = 20.0;
+  static const double cardBorderRadius = 12.0;
 }
 
 class AppPadding {

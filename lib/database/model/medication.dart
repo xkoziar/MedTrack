@@ -18,6 +18,7 @@ class Medication implements IEntity {
   final bool isActive;
   final List<int> scheduleDays;
   final List<String> scheduleTimes;
+  final String? nfcTagId; // Optional NFC tag assignment
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -32,6 +33,7 @@ class Medication implements IEntity {
     required this.isActive,
     required this.scheduleDays,
     required this.scheduleTimes,
+    this.nfcTagId,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) : id = id ?? const Uuid().v4(),
@@ -65,6 +67,7 @@ class Medication implements IEntity {
     bool? isActive,
     List<int>? scheduleDays,
     List<String>? scheduleTimes,
+    String? nfcTagId,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) {
@@ -79,6 +82,7 @@ class Medication implements IEntity {
       isActive: isActive ?? this.isActive,
       scheduleDays: scheduleDays ?? this.scheduleDays,
       scheduleTimes: scheduleTimes ?? this.scheduleTimes,
+      nfcTagId: nfcTagId ?? this.nfcTagId,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );

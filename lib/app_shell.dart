@@ -12,7 +12,7 @@ class AppShell extends StatefulWidget {
 }
 
 class _AppShellState extends State<AppShell> {
-  int _index = 0;
+  int _index = 1;
 
   @override
   void initState() {

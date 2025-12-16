@@ -29,7 +29,7 @@ class QuickStatsCard extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(AppSpacing.sm),
             decoration: BoxDecoration(
-              color: color.withOpacity(0.1),
+              color: color.withAlpha(25),
               borderRadius: BorderRadius.circular(AppSpacing.sm),
             ),
             child: Icon(icon, color: color, size: 24),
@@ -50,7 +50,7 @@ class QuickStatsCard extends StatelessWidget {
               subtitle!,
               style: TextStyle(
                 fontSize: 12,
-                color: AppColors.textSecondary.withOpacity(0.7),
+                color: AppColors.textSecondary.withAlpha(179),
               ),
             ),
           ],

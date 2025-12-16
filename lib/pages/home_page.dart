@@ -3,11 +3,13 @@ import 'package:med_track/database/ioc/ioc_container.dart';
 import 'package:med_track/database/service/auth_service.dart';
 import 'package:med_track/database/service/medication_database_service.dart';
 import 'package:med_track/database/service/dose_event_database_service.dart';
+import 'package:med_track/database/service/nfc_background_service.dart';
 import 'package:med_track/database/model/medication.dart';
 import 'package:med_track/database/model/dose_event.dart';
 import 'package:med_track/utils/constants.dart';
 import 'package:med_track/utils/handling_stream_builder.dart';
 import 'package:med_track/components/common/gradient_header.dart';
+import 'package:med_track/utils/snackbar_utils.dart';
 
 import 'home/stats_section.dart';
 import 'home/schedule_section.dart';
@@ -20,24 +22,42 @@ class HomePage extends StatefulWidget {
   State<HomePage> createState() => _HomePageState();
 }
 
-class _HomePageState extends State<HomePage> {
+class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
   final AuthService _authService = get<AuthService>();
   final MedicationDatabaseService _medDbService =
       get<MedicationDatabaseService>();
   final DoseEventDatabaseService _doseEventService =
       get<DoseEventDatabaseService>();
+  final NfcBackgroundService _nfcBackgroundService = get<NfcBackgroundService>();
 
   String? _userId;
+  bool _isNfcListening = false;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _initializeUser();
+    _startNfcListening();
   }
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    _stopNfcListening();
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+
+    // Start/stop NFC listening based on app state
+    if (state == AppLifecycleState.resumed) {
+      _startNfcListening();
+    } else if (state == AppLifecycleState.paused) {
+      _stopNfcListening();
+    }
   }
 
   Future<void> _initializeUser() async {
@@ -52,6 +72,46 @@ class _HomePageState extends State<HomePage> {
   Future<void> _refreshData() async {
     if (!mounted) return;
     setState(() {});
+  }
+
+  Future<void> _startNfcListening() async {
+    if (_isNfcListening) return;
+
+    setState(() => _isNfcListening = true);
+
+    await _nfcBackgroundService.startListening(
+      onDoseMarked: (tagName, medicationsMarked) {
+        if (mounted) {
+          showSnackBar(
+            context,
+            '✓ $tagName scanned - Marked $medicationsMarked dose(s)',
+            backgroundColor: AppColors.success,
+          );
+          _refreshData();
+        }
+      },
+      onError: (error) {
+        // Only show error if it's not about unknown tags
+        // (to avoid spamming when scanning random NFC items)
+        if (mounted && !error.contains('Unknown NFC tag')) {
+          showSnackBar(
+            context,
+            error,
+            backgroundColor: AppColors.warning,
+          );
+        }
+      },
+    );
+  }
+
+  Future<void> _stopNfcListening() async {
+    if (!_isNfcListening) return;
+
+    await _nfcBackgroundService.stopListening();
+
+    if (mounted) {
+      setState(() => _isNfcListening = false);
+    }
   }
 
   Future<void> _toggleMedication(

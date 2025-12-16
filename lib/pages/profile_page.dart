@@ -12,6 +12,10 @@ import '../components/profile/dialogs/delete_account_dialog.dart';
 import '../utils/constants.dart';
 import '../utils/handling_stream_builder.dart';
 import '../utils/snackbar_utils.dart';
+import '../components/profile/notification_settings_card.dart';
+import '../components/profile/profile_action_buttons.dart';
+import '../components/profile/danger_zone_card.dart';
+import 'nfc_tags_page.dart';
 
 class ProfilePage extends StatelessWidget {
   ProfilePage({super.key});
@@ -61,8 +65,103 @@ class ProfilePage extends StatelessWidget {
                     _onToggleNotifications(context, user, value),
               );
             },
+          return CustomScrollView(
+            slivers: [
+              GradientSliverHeader(
+                title: 'Profile',
+                subtitle: 'Settings and stats',
+              ),
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: AppPadding.page,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      UserInfoCard(name: user.name, email: user.email),
+                      const SizedBox(height: AppSpacing.sm),
+                      AdherenceRateCard(rate: '87%', period: '30 days'),
+                      const SizedBox(height: AppSpacing.xl),
+                      UserStatsCard(
+                        thisWeek: '92% (33/36 dávek)',
+                        thisMonth: '87% (104/120 dávek)',
+                        daysStreak: '5 dní bez vynechání',
+                      ),
+                      const SizedBox(height: AppSpacing.sm),
+                      NotificationSettingsCard(
+                        user: user,
+                        onToggle: (value) =>
+                            _onToggleNotifications(context, user, value),
+                      ),
+                      const SizedBox(height: AppSpacing.sm),
+                      _buildNfcTagsCard(context),
+                      const SizedBox(height: AppSpacing.xl),
+                      ProfileActionButtons(
+                        onChangePassword: () =>
+                            _showChangePasswordDialog(context, user),
+                        onLogout: _authService.signOut,
+                      ),
+                      const SizedBox(height: AppSpacing.md),
+                      DangerZoneCard(
+                        onDelete: () => _showDeleteAccountDialog(context, user),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
           );
         },
+      ),
+    );
+  }
+
+  Widget _buildNfcTagsCard(BuildContext context) {
+    return Card(
+      child: InkWell(
+        onTap: () => Navigator.of(context).push(
+          MaterialPageRoute(builder: (_) => const NfcTagsPage()),
+        ),
+        borderRadius: BorderRadius.circular(AppSpacing.cardBorderRadius),
+        child: Padding(
+          padding: const EdgeInsets.all(AppSpacing.lg),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  gradient: AppGradients.green,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Icon(
+                  Icons.nfc,
+                  color: Colors.white,
+                  size: 24,
+                ),
+              ),
+              const SizedBox(width: AppSpacing.md),
+              const Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'NFC Tags',
+                      style: AppTextStyles.bodyBold,
+                    ),
+                    SizedBox(height: 4),
+                    Text(
+                      'Manage your NFC tags',
+                      style: TextStyle(
+                        color: Colors.grey,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
+            ],
+          ),
+        ),
       ),
     );
   }
