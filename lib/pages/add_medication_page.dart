@@ -354,13 +354,14 @@ class _AddMedicationPageState extends State<AddMedicationPage> {
 
 
 
-  void _confirmDeleteTag(BuildContext modalContext, NfcTag tag) async {
+  Future<void> _confirmDeleteTag(BuildContext modalContext, NfcTag tag) async {
     final confirmed = await NfcTagDialogs.showDeleteTagDialog(context, tag.name);
 
     if (confirmed) {
       try {
         await _nfcTagService.delete(tag.id);
 
+        if (!modalContext.mounted) return;
         Navigator.of(modalContext).pop(); // Close bottom sheet
 
         // Clear selection if deleted tag was selected

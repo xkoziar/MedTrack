@@ -37,6 +37,8 @@ class NfcTagDialogs {
       await nfcService.startIgnoringScans();
     }
 
+    if (!context.mounted) return null;
+
     final result = await showDialog<NfcTag>(
       context: context,
       barrierDismissible: !pauseScanning,
@@ -121,7 +123,7 @@ class NfcTagDialogs {
     );
 
     // Resume NFC scanning if it was paused
-    if (pauseScanning && context.mounted) {
+    if (pauseScanning) {
       nfcService.stopIgnoringScans();
     }
 

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:med_track/components/common/gradient_header.dart';
 import 'package:med_track/components/nfc/nfc_tag_dialogs.dart';
+import 'package:med_track/components/nfc/nfc_tag_card.dart';
 import 'package:med_track/database/ioc/ioc_container.dart';
 import 'package:med_track/database/model/nfc_tag.dart';
 import 'package:med_track/database/service/auth_service.dart';
@@ -8,6 +9,7 @@ import 'package:med_track/database/service/medication_database_service.dart';
 import 'package:med_track/database/service/nfc_tag_database_service.dart';
 import 'package:med_track/utils/constants.dart';
 import 'package:med_track/utils/snackbar_utils.dart';
+import 'package:med_track/pages/home/empty_state.dart';
 
 class NfcTagsPage extends StatefulWidget {
   const NfcTagsPage({super.key});
@@ -136,23 +138,9 @@ class _NfcTagsPageState extends State<NfcTagsPage> {
             )
           else if (_tags.isEmpty)
             const SliverFillRemaining(
-              child: Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.nfc, size: 64, color: Colors.grey),
-                    SizedBox(height: 16),
-                    Text(
-                      'No NFC tags',
-                      style: TextStyle(fontSize: 18, color: Colors.grey),
-                    ),
-                    SizedBox(height: 8),
-                    Text(
-                      'Add tags when creating medications',
-                      style: TextStyle(color: Colors.grey),
-                    ),
-                  ],
-                ),
+              child: EmptyState(
+                title: 'No NFC tags',
+                subtitle: 'Add tags when creating medications',
               ),
             )
           else
@@ -166,46 +154,12 @@ class _NfcTagsPageState extends State<NfcTagsPage> {
                       future: _getMedicationCount(tag),
                       builder: (context, snapshot) {
                         final medCount = snapshot.data ?? 0;
-                        return Card(
-                          margin: const EdgeInsets.only(bottom: AppSpacing.md),
-                          child: ListTile(
-                            leading: Container(
-                              padding: const EdgeInsets.all(12),
-                              decoration: BoxDecoration(
-                                gradient: AppGradients.green,
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: const Icon(
-                                Icons.nfc,
-                                color: Colors.white,
-                                size: 24,
-                              ),
-                            ),
-                            title: Text(
-                              tag.name,
-                              style: AppTextStyles.bodyBold,
-                            ),
-                            subtitle: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                const SizedBox(height: 4),
-                                Text(
-                                  'Tag ID: ${tag.tagId}',
-                                  style: const TextStyle(
-                                    fontSize: 12,
-                                    color: Colors.grey,
-                                  ),
-                                ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  '$medCount medication${medCount != 1 ? 's' : ''}',
-                                  style: const TextStyle(
-                                    fontSize: 12,
-                                    color: AppColors.primary,
-                                  ),
-                                ),
-                              ],
-                            ),
+                        return Padding(
+                          padding: const EdgeInsets.only(bottom: AppSpacing.md),
+                          child: NfcTagCard(
+                            tag: tag,
+                            subtitle: 'Tag ID: ${tag.tagId}\n$medCount medication${medCount != 1 ? 's' : ''}',
+                            showChevron: false,
                             trailing: PopupMenuButton<String>(
                               onSelected: (value) {
                                 if (value == 'rename') {

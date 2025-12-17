@@ -12,6 +12,8 @@ import 'package:med_track/utils/snackbar_utils.dart';
 import 'package:med_track/components/common/app_card.dart';
 import 'package:med_track/components/common/buttons/primary_button.dart';
 import 'package:med_track/components/nfc/nfc_tag_dialogs.dart';
+import 'package:med_track/components/nfc/nfc_tag_card.dart';
+import 'package:med_track/pages/home/empty_state.dart';
 
 class NfcManagementPage extends StatefulWidget {
   final Medication? medication; // If provided, auto-assign to this medication
@@ -126,7 +128,7 @@ class _NfcManagementPageState extends State<NfcManagementPage> {
         nfcTag: nfcTag,
         initialMedicationIds: widget.medication != null ? [widget.medication!.id] : [],
       );
-      
+
       if (newTag != null && mounted) {
         _loadUserData();
       }
@@ -193,35 +195,30 @@ class _NfcManagementPageState extends State<NfcManagementPage> {
                     ),
                     const SizedBox(height: AppSpacing.md),
                     if (_userTags.isEmpty)
-                      AppCard(
-                        child: Center(
-                          child: Padding(
-                            padding: const EdgeInsets.all(AppSpacing.lg),
-                            child: Text(
-                              'No NFC tags yet.\nScan a tag to get started!',
-                              textAlign: TextAlign.center,
-                              style: AppTextStyles.bodyMedium.copyWith(
-                                color: AppColors.textSecondary,
-                              ),
-                            ),
-                          ),
+                      const AppCard(
+                        child: EmptyState(
+                          title: 'No NFC tags yet',
+                          subtitle: 'Scan a tag to get started',
                         ),
                       )
                     else
-                      ..._userTags.map((tag) => Padding(
-                            padding: const EdgeInsets.only(
-                              bottom: AppSpacing.md,
-                            ),
-                            child: _NfcTagCard(
-                              tag: tag,
-                              medications: _userMedications
-                                  .where(
-                                    (m) => tag.medicationIds.contains(m.id),
-                                  )
-                                  .toList(),
-                              onTap: () => _showManageTagPage(tag),
-                            ),
-                          )),
+                      ..._userTags.map((tag) {
+                        final medications = _userMedications
+                            .where((m) => tag.medicationIds.contains(m.id))
+                            .toList();
+                        return Padding(
+                          padding: const EdgeInsets.only(
+                            bottom: AppSpacing.md,
+                          ),
+                          child: NfcTagCard(
+                            tag: tag,
+                            subtitle: medications.isEmpty
+                                ? 'No medications assigned'
+                                : '${medications.length} medication(s) assigned',
+                            onTap: () => _showManageTagPage(tag),
+                          ),
+                        );
+                      }),
                   ],
                   const SizedBox(height: AppSpacing.xxl),
                 ],
@@ -229,58 +226,6 @@ class _NfcManagementPageState extends State<NfcManagementPage> {
             ),
           ),
         ],
-      ),
-    );
-  }
-}
-
-class _NfcTagCard extends StatelessWidget {
-  final NfcTag tag;
-  final List<Medication> medications;
-  final VoidCallback onTap;
-
-  const _NfcTagCard({
-    required this.tag,
-    required this.medications,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: AppCard(
-        child: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(AppSpacing.md),
-              decoration: BoxDecoration(
-                gradient: AppGradients.green,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: const Icon(Icons.nfc, color: Colors.white, size: 28),
-            ),
-            const SizedBox(width: AppSpacing.md),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(tag.name, style: AppTextStyles.bodyMediumSemiBold),
-                  const SizedBox(height: AppSpacing.xs),
-                  Text(
-                    medications.isEmpty
-                        ? 'No medications assigned'
-                        : '${medications.length} medication(s) assigned',
-                    style: AppTextStyles.bodySmall.copyWith(
-                      color: AppColors.textSecondary,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Icon(Icons.chevron_right, color: AppColors.textSecondary),
-          ],
-        ),
       ),
     );
   }
@@ -342,29 +287,7 @@ class _ManageNfcTagPageState extends State<ManageNfcTagPage> {
   }
 
   Future<void> _renameTag() async {
-    final nameController = TextEditingController(text: _tag.name);
-
-    final newName = await showDialog<String>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Rename Tag'),
-        content: TextField(
-          controller: nameController,
-          autofocus: true,
-          decoration: const InputDecoration(labelText: 'Tag Name'),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(),
-            child: const Text('Cancel'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.of(ctx).pop(nameController.text.trim()),
-            child: const Text('Save'),
-          ),
-        ],
-      ),
-    );
+    final newName = await NfcTagDialogs.showRenameTagDialog(context, _tag.name);
 
     if (newName != null && newName.isNotEmpty && newName != _tag.name) {
       await _nfcTagService.updateTagName(_tag.id, newName);
@@ -379,28 +302,9 @@ class _ManageNfcTagPageState extends State<ManageNfcTagPage> {
   }
 
   Future<void> _deleteTag() async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Delete NFC Tag?'),
-        content: Text('Are you sure you want to delete "${_tag.name}"?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(false),
-            child: const Text('Cancel'),
-          ),
-          FilledButton(
-            style: FilledButton.styleFrom(
-              backgroundColor: AppColors.danger,
-            ),
-            onPressed: () => Navigator.of(ctx).pop(true),
-            child: const Text('Delete'),
-          ),
-        ],
-      ),
-    );
+    final confirmed = await NfcTagDialogs.showDeleteTagDialog(context, _tag.name);
 
-    if (confirmed == true) {
+    if (confirmed) {
       await _nfcTagService.delete(_tag.id);
       if (mounted) {
         Navigator.of(context).pop();

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:med_track/components/common/app_card.dart';
+import 'package:med_track/components/common/nfc_icon_container.dart';
 import 'package:med_track/database/model/nfc_tag.dart';
 import 'package:med_track/utils/constants.dart';
 
@@ -39,14 +40,7 @@ class NfcTagSelector extends StatelessWidget {
       return AppCard(
         child: Row(
           children: [
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                gradient: AppGradients.green,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: const Icon(Icons.nfc, color: Colors.white, size: 24),
-            ),
+            const NfcIconContainer(),
             const SizedBox(width: AppSpacing.md),
             Expanded(
               child: Column(
