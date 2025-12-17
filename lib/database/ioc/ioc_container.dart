@@ -9,6 +9,7 @@ import '../service/nfc_tag_database_service.dart';
 import '../service/nfc_manager_service.dart';
 import '../service/nfc_background_service.dart';
 import '../service/nfc_writer_service.dart';
+import '../service/nfc_dose_marker_service.dart';
 
 final get = GetIt.instance;
 
@@ -20,6 +21,7 @@ class IocContainer {
     get.registerSingleton(DoseEventDatabaseService());
     get.registerSingleton(NfcTagDatabaseService());
     get.registerSingleton(NfcManagerService());
+    get.registerSingleton(NfcDoseMarkerService());
     get.registerSingleton(NfcBackgroundService());
     get.registerSingleton(NfcWriterService());
   }

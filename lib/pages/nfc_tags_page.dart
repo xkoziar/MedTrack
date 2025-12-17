@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:med_track/components/common/gradient_header.dart';
+import 'package:med_track/components/nfc/nfc_tag_dialogs.dart';
 import 'package:med_track/database/ioc/ioc_container.dart';
 import 'package:med_track/database/model/nfc_tag.dart';
 import 'package:med_track/database/service/auth_service.dart';
@@ -54,101 +55,55 @@ class _NfcTagsPageState extends State<NfcTagsPage> {
   }
 
   Future<void> _deleteTag(NfcTag tag) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Delete NFC Tag?'),
-        content: Text(
-          'Are you sure you want to delete "${tag.name}"?\n\n'
-          'This will remove the tag from all medications.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(false),
-            child: const Text('Cancel'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.of(ctx).pop(true),
-            style: FilledButton.styleFrom(
-              backgroundColor: AppColors.danger,
-            ),
-            child: const Text('Delete'),
-          ),
-        ],
-      ),
-    );
+    final confirmed = await NfcTagDialogs.showDeleteTagDialog(context, tag.name);
 
-    if (confirmed != true) return;
+    if (confirmed) {
+      try {
+        await _nfcTagService.delete(tag.id);
+        await _loadTags();
 
-    try {
-      await _nfcTagService.delete(tag.id);
-      await _loadTags();
-
-      if (mounted) {
-        showSnackBar(
-          context,
-          'Tag "${tag.name}" deleted',
-          backgroundColor: AppColors.success,
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        showSnackBar(
-          context,
-          'Error deleting tag: $e',
-          backgroundColor: AppColors.danger,
-        );
+        if (mounted) {
+          showSnackBar(
+            context,
+            'Tag "${tag.name}" deleted',
+            backgroundColor: AppColors.success,
+          );
+        }
+      } catch (e) {
+        if (mounted) {
+          showSnackBar(
+            context,
+            'Error deleting tag: $e',
+            backgroundColor: AppColors.danger,
+          );
+        }
       }
     }
   }
 
   Future<void> _renameTag(NfcTag tag) async {
-    final controller = TextEditingController(text: tag.name);
+    final newName = await NfcTagDialogs.showRenameTagDialog(context, tag.name);
 
-    final newName = await showDialog<String>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Rename Tag'),
-        content: TextField(
-          controller: controller,
-          autofocus: true,
-          decoration: const InputDecoration(
-            labelText: 'Tag Name',
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(),
-            child: const Text('Cancel'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.of(ctx).pop(controller.text.trim()),
-            child: const Text('Save'),
-          ),
-        ],
-      ),
-    );
+    if (newName != null && newName.isNotEmpty && newName != tag.name) {
+      try {
+        await _nfcTagService.updateTagName(tag.id, newName);
+        await _loadTags();
 
-    if (newName == null || newName.isEmpty || newName == tag.name) return;
-
-    try {
-      await _nfcTagService.updateTagName(tag.id, newName);
-      await _loadTags();
-
-      if (mounted) {
-        showSnackBar(
-          context,
-          'Tag renamed to "$newName"',
-          backgroundColor: AppColors.success,
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        showSnackBar(
-          context,
-          'Error renaming tag: $e',
-          backgroundColor: AppColors.danger,
-        );
+        if (mounted) {
+          showSnackBar(
+            context,
+            'Tag renamed to "$newName"',
+            backgroundColor: AppColors.success,
+          );
+        }
+      } catch (e) {
+        if (mounted) {
+          showSnackBar(
+            context,
+            'Error renaming tag: $e',
+            backgroundColor: AppColors.danger,
+          );
+        }
       }
     }
   }

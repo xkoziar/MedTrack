@@ -69,24 +69,11 @@ class NfcWriterService {
 
       var ndef = Ndef.from(tag);
 
-      if (ndef == null) {
-        print('[NfcWriter] Tag is not NDEF formatted or compatible');
-        print('[NfcWriter] This might be an unformatted NFC Forum Type 2 tag');
+      if (ndef == null || !ndef.isWritable) {
         return false;
       }
 
-      print('[NfcWriter] Tag is NDEF formatted');
-      print('[NfcWriter] Writable: ${ndef.isWritable}');
-      print('[NfcWriter] Max size: ${ndef.maxSize} bytes');
-      print('[NfcWriter] Message size: ${message.byteLength} bytes');
-
-      if (!ndef.isWritable) {
-        print('[NfcWriter] Tag is read-only');
-        return false;
-      }
-
-      final messageSize = message.byteLength;
-      if (messageSize > ndef.maxSize) {
+      if (message.byteLength > ndef.maxSize) {
         return false;
       }
 

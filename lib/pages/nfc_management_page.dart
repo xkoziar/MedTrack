@@ -11,7 +11,7 @@ import 'package:med_track/utils/constants.dart';
 import 'package:med_track/utils/snackbar_utils.dart';
 import 'package:med_track/components/common/app_card.dart';
 import 'package:med_track/components/common/buttons/primary_button.dart';
-import 'package:med_track/components/nfc_help_dialog.dart';
+import 'package:med_track/components/nfc/nfc_tag_dialogs.dart';
 
 class NfcManagementPage extends StatefulWidget {
   final Medication? medication; // If provided, auto-assign to this medication
@@ -82,7 +82,7 @@ class _NfcManagementPageState extends State<NfcManagementPage> {
 
     await _nfcManager.scanNfcTag(
       onTagDiscovered: (tagId, nfcTag) async {
-        await _handleTagScanned(tagId);
+        await _handleTagScanned(tagId, nfcTag);
       },
       onError: () {
         if (mounted) {
@@ -102,132 +102,38 @@ class _NfcManagementPageState extends State<NfcManagementPage> {
     }
   }
 
-  Future<void> _handleTagScanned(String tagId) async {
+  Future<void> _handleTagScanned(String tagId, dynamic nfcTag) async {
     final userId = _authService.user?.uid;
     if (userId == null) return;
 
     // Check if tag already exists
     final existingTag = await _nfcTagService.findByTagId(userId, tagId);
 
+    if (!mounted) return;
+
     if (existingTag != null) {
       // Tag exists, show options to manage it
-      if (mounted) {
-        _showTagOptionsDialog(existingTag);
-      }
+      NfcTagDialogs.showTagOptionsDialog(
+        context,
+        existingTag,
+        onUpdated: _loadUserData,
+      );
     } else {
       // New tag, prompt for name
-      if (mounted) {
-        _showNameTagDialog(tagId);
+      final newTag = await NfcTagDialogs.showNameNewTagDialog(
+        context,
+        tagId,
+        nfcTag: nfcTag,
+        initialMedicationIds: widget.medication != null ? [widget.medication!.id] : [],
+      );
+      
+      if (newTag != null && mounted) {
+        _loadUserData();
       }
     }
   }
 
-  void _showNameTagDialog(String tagId) {
-    final nameController = TextEditingController();
 
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Name Your NFC Tag'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Tag ID: $tagId',
-              style: AppTextStyles.bodySmall.copyWith(
-                color: AppColors.textSecondary,
-              ),
-            ),
-            const SizedBox(height: AppSpacing.md),
-            TextField(
-              controller: nameController,
-              autofocus: true,
-              decoration: const InputDecoration(
-                labelText: 'Tag Name',
-                hintText: 'e.g., Morning Meds, Bedside Table',
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(),
-            child: const Text('Cancel'),
-          ),
-          FilledButton(
-            onPressed: () async {
-              final name = nameController.text.trim();
-              if (name.isEmpty) {
-                showSnackBar(ctx, 'Please enter a name');
-                return;
-              }
-              Navigator.of(ctx).pop();
-              await _createNewTag(tagId, name);
-            },
-            child: const Text('Save'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Future<void> _createNewTag(String tagId, String name) async {
-    final userId = _authService.user?.uid;
-    if (userId == null) return;
-
-    final newTag = NfcTag(
-      userId: userId,
-      tagId: tagId,
-      name: name,
-      medicationIds: widget.medication != null ? [widget.medication!.id] : [],
-    );
-
-    await _nfcTagService.create(newTag);
-
-    if (mounted) {
-      showSnackBar(
-        context,
-        'NFC tag "$name" created successfully',
-        backgroundColor: AppColors.success,
-      );
-      _loadUserData();
-    }
-  }
-
-  void _showTagOptionsDialog(NfcTag tag) {
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(tag.name),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('Tag ID: ${tag.tagId}'),
-            const SizedBox(height: AppSpacing.sm),
-            Text(
-              'Assigned to ${tag.medicationIds.length} medication(s)',
-              style: AppTextStyles.bodySmall,
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(),
-            child: const Text('Close'),
-          ),
-          FilledButton(
-            onPressed: () {
-              Navigator.of(ctx).pop();
-              _showManageTagPage(tag);
-            },
-            child: const Text('Manage'),
-          ),
-        ],
-      ),
-    );
-  }
 
   void _showManageTagPage(NfcTag tag) {
     Navigator.of(context).push(
@@ -246,11 +152,6 @@ class _NfcManagementPageState extends State<NfcManagementPage> {
             title: 'NFC Tags',
             subtitle: 'Scan and manage your NFC tags',
             onBack: () => Navigator.of(context).maybePop(),
-            trailing: IconButton(
-              icon: const Icon(Icons.help_outline, color: Colors.white),
-              onPressed: () => NfcHelpDialog.show(context),
-              tooltip: 'How to use NFC',
-            ),
           ),
           SliverToBoxAdapter(
             child: Padding(

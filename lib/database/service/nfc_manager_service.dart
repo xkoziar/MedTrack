@@ -34,7 +34,7 @@ class NfcManagerService {
           final identifier = NfcTagFormatter.extractTagId(tag);
 
           if (identifier != null) {
-            await onTagDiscovered(identifier, tag);
+          await onTagDiscovered(identifier, tag);
           }
 
           await stopSession();

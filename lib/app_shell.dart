@@ -31,6 +31,11 @@ class _AppShellState extends State<AppShell> {
           HistoryPage(),
           MedicationPage(key: const ValueKey('medication_page')),
           ProfilePage(key: const ValueKey('profile_page')),
+          MedicationDetailPage(
+            key: const ValueKey('detail_page'),
+            medication: _mockMedication,
+            recentEvents: _mockEvents,
+          ),
         ],
       ),
       bottomNavigationBar: BottomNavigationBar(

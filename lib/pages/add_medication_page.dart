@@ -7,6 +7,7 @@ import 'package:med_track/components/common/buttons/primary_button.dart';
 import 'package:med_track/components/common/buttons/secondary_button.dart';
 import 'package:med_track/components/common/custom_text_field.dart';
 import 'package:med_track/components/common/gradient_header.dart';
+import 'package:med_track/components/nfc/nfc_tag_dialogs.dart';
 import 'package:med_track/database/ioc/ioc_container.dart';
 import 'package:med_track/database/model/medication.dart';
 import 'package:med_track/database/model/nfc_tag.dart';
@@ -19,7 +20,6 @@ import '../database/service/auth_service.dart';
 import '../database/service/medication_database_service.dart';
 import '../database/service/nfc_tag_database_service.dart';
 import '../database/service/nfc_background_service.dart';
-import '../database/service/nfc_writer_service.dart';
 
 class AddMedicationPage extends StatefulWidget {
   final Medication? medication;
@@ -38,7 +38,6 @@ class _AddMedicationPageState extends State<AddMedicationPage> {
   final _medicationService = get<MedicationDatabaseService>();
   final _authService = get<AuthService>();
   final _nfcTagService = get<NfcTagDatabaseService>();
-  final _nfcWriter = get<NfcWriterService>();
 
   late bool _isEditMode;
   final Set<int> _selectedDays = {};
@@ -51,7 +50,6 @@ class _AddMedicationPageState extends State<AddMedicationPage> {
   List<NfcTag> _availableTags = [];
   bool _isLoadingTags = false;
   bool _isScanning = false;
-  bool _isNamingDialogOpen = false;
 
   @override
   void initState() {
@@ -130,10 +128,6 @@ class _AddMedicationPageState extends State<AddMedicationPage> {
     final nfcService = get<NfcBackgroundService>();
 
     nfcService.setManualScanCallback((nfc_manager.NfcTag tag) async {
-      if (_isNamingDialogOpen) {
-        return;
-      }
-
       nfcService.clearManualScanCallback();
       await _handleTagDiscovered(tag);
     });
@@ -342,174 +336,66 @@ class _AddMedicationPageState extends State<AddMedicationPage> {
       final nfcService = get<NfcBackgroundService>();
       nfcService.stopIgnoringScans();
     } else {
-      _showNameNewTagDialog(identifier, nfcTag: nfcTag);
-    }
-  }
+      final newTag = await NfcTagDialogs.showNameNewTagDialog(
+        context,
+        identifier,
+        nfcTag: nfcTag,
+        pauseScanning: true,
+      );
 
-  void _showNameNewTagDialog(String tagId, {nfc_manager.NfcTag? nfcTag}) async {
-    final nameController = TextEditingController();
-
-    setState(() => _isNamingDialogOpen = true);
-
-    final nfcService = get<NfcBackgroundService>();
-    await nfcService.startIgnoringScans();
-
-    if (!mounted) return;
-
-    final result = await showDialog<bool>(
-      context: context,
-      barrierDismissible: false,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Name Your NFC Tag'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: nameController,
-              autofocus: true,
-              decoration: const InputDecoration(
-                labelText: 'Tag Name',
-                hintText: 'e.g., Bedroom Tag',
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(false),
-            child: const Text('Cancel'),
-          ),
-          FilledButton(
-            onPressed: () async {
-              final name = nameController.text.trim();
-              if (name.isEmpty) return;
-
-              final userId = _authService.user?.uid;
-              if (userId == null) return;
-
-              try {
-                final newTag = NfcTag(
-                  userId: userId,
-                  tagId: tagId,
-                  name: name,
-                  medicationIds: [],
-                );
-
-                await _nfcTagService.create(newTag);
-                await _loadNfcTags();
-
-                if (!mounted) return;
-
-                setState(() {
-                  _selectedNfcTagId = newTag.id;
-                });
-
-                if (nfcTag != null) {
-                  try {
-                    await _nfcWriter.writeAppLaunchRecordToTag(nfcTag, tagId);
-                  } catch (e) {
-                    // NDEF write failure doesn't prevent tag creation
-                  }
-                }
-
-                Navigator.of(ctx).pop(true);
-
-                if (!mounted) return;
-
-                showSnackBar(
-                  context,
-                  'Tag "$name" created',
-                  backgroundColor: AppColors.success,
-                );
-              } catch (e) {
-                Navigator.of(ctx).pop(false);
-
-                if (!mounted) return;
-                showSnackBar(
-                  context,
-                  'Error: $e',
-                  backgroundColor: AppColors.danger,
-                );
-              }
-            },
-            child: const Text('Save'),
-          ),
-        ],
-      ),
-    );
-
-    if (mounted) {
-      setState(() => _isNamingDialogOpen = false);
-
-      final nfcService = get<NfcBackgroundService>();
-      nfcService.stopIgnoringScans();
+      if (newTag != null) {
+        setState(() {
+          _selectedNfcTagId = newTag.id;
+        });
+        await _loadNfcTags();
+      }
     }
   }
 
 
 
-  void _confirmDeleteTag(BuildContext modalContext, NfcTag tag) {
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Delete NFC Tag?'),
-        content: Text(
-          'Are you sure you want to delete "${tag.name}"?\n\n'
-          'This will remove the tag from all medications.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(),
-            child: const Text('Cancel'),
-          ),
-          FilledButton(
-            onPressed: () async {
-              Navigator.of(ctx).pop(); // Close dialog
-              Navigator.of(modalContext).pop(); // Close bottom sheet
+  void _confirmDeleteTag(BuildContext modalContext, NfcTag tag) async {
+    final confirmed = await NfcTagDialogs.showDeleteTagDialog(context, tag.name);
 
-              try {
-                await _nfcTagService.delete(tag.id);
-                await _loadNfcTags();
+    if (confirmed) {
+      try {
+        await _nfcTagService.delete(tag.id);
 
-                // Clear selection if deleted tag was selected
-                if (_selectedNfcTagId == tag.id) {
-                  setState(() => _selectedNfcTagId = null);
-                }
+        Navigator.of(modalContext).pop(); // Close bottom sheet
 
-                if (!mounted) return;
-                showSnackBar(
-                  context,
-                  'Tag "${tag.name}" deleted',
-                  backgroundColor: AppColors.success,
-                );
-              } catch (e) {
-                if (!mounted) return;
-                showSnackBar(
-                  context,
-                  'Error deleting tag: $e',
-                  backgroundColor: AppColors.danger,
-                );
-              }
-            },
-            style: FilledButton.styleFrom(
-              backgroundColor: AppColors.danger,
-            ),
-            child: const Text('Delete'),
-          ),
-        ],
-      ),
-    );
+        // Clear selection if deleted tag was selected
+        if (_selectedNfcTagId == tag.id) {
+          setState(() => _selectedNfcTagId = null);
+        }
+        await _loadNfcTags();
+
+        if (!mounted) return;
+        showSnackBar(
+          context,
+          'Tag "${tag.name}" deleted',
+          backgroundColor: AppColors.success,
+        );
+      } catch (e) {
+        if (!mounted) return;
+        showSnackBar(
+          context,
+          'Error deleting tag: $e',
+          backgroundColor: AppColors.danger,
+        );
+      }
+    }
   }
 
   void _showNfcTagPicker() {
     showModalBottomSheet(
       context: context,
-      builder: (ctx) => Padding(
-        padding: const EdgeInsets.all(AppSpacing.lg),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
+      builder: (ctx) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(AppSpacing.lg),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
             Text('Select NFC Tag', style: AppTextStyles.heading2),
             const SizedBox(height: AppSpacing.md),
             if (_availableTags.isEmpty)
@@ -564,7 +450,8 @@ class _AddMedicationPageState extends State<AddMedicationPage> {
                 },
                 child: const Text('Remove NFC Tag'),
               ),
-          ],
+            ],
+          ),
         ),
       ),
     );
