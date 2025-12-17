@@ -4,7 +4,6 @@ import 'package:med_track/database/service/dose_event_database_service.dart';
 
 import '../service/user_database_service.dart';
 import '../service/medication_database_service.dart';
-import '../service/dose_event_database_service.dart';
 import '../service/nfc_tag_database_service.dart';
 import '../service/nfc_manager_service.dart';
 import '../service/nfc_background_service.dart';

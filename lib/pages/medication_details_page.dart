@@ -19,18 +19,12 @@ import '../utils/snackbar_utils.dart';
 
 class MedicationDetailPage extends StatelessWidget {
   final Medication medication;
-  final String? nfcTagId;
-  final VoidCallback? onPairNfc;
-  final List<DoseEvent> recentEvents;
   final _medicationService = get<MedicationDatabaseService>();
   final _doseEventService = get<DoseEventDatabaseService>();
 
   MedicationDetailPage({
     super.key,
     required this.medication,
-    this.nfcTagId,
-    this.onPairNfc,
-    required this.recentEvents,
   });
 
   Future<void> _handleDelete(BuildContext context) async {
@@ -90,8 +84,6 @@ class MedicationDetailPage extends StatelessWidget {
                 children: [
                   MedicationInfoCard(medication: medication),
                   const SizedBox(height: AppSpacing.xl),
-                  NfcPairCard(nfcTagId: nfcTagId, onPair: onPairNfc),
-                  const SizedBox(height: AppSpacing.xl),
                   HandlingStreamBuilder<List<DoseEvent>>(
                     stream: _doseEventService
                         .observeMedicationEventsTodayAndEarlier(
@@ -100,7 +92,6 @@ class MedicationDetailPage extends StatelessWidget {
                         ),
                     builder: (events) => DoseHistoryCard(events: events),
                   ),
-                  DoseHistoryCard(events: sortedEvents),
                   const SizedBox(height: AppSpacing.xxl),
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,

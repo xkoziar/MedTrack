@@ -147,26 +147,12 @@ class DoseEventDatabaseService extends FirestoreRepository<DoseEvent> {
       if (event.scheduledAt.isBefore(now)) {
         batch.update(doc.reference, {
           'status': DoseStatus.missed.name,
-          // 'updatedAt': DateTime.now(),
         });
-      }
-      else if (taken) {
-        // Create new event
-        final event = DoseEvent(
-          userId: userId,
-          medicationId: medicationId,
-          scheduledAt: scheduledAt,
-          takenAt: DateTime.now(),
-          status: DoseStatus.taken,
-        );
-        await create(event);
       }
     }
 
     await batch.commit();
   }
-
-
 
   Future<List<DoseEvent>> getMedicationEvents(String medicationId) async {
     final query = await FirebaseFirestore.instance
@@ -306,18 +292,4 @@ class DoseEventDatabaseService extends FirestoreRepository<DoseEvent> {
     )
         .toList();
   }
-
-  // Get dose events for a specific medication
-  Future<List<DoseEvent>> getMedicationEvents(String medicationId) async {
-    final query = await FirebaseFirestore.instance
-        .collection('dose_events')
-        .where('medicationId', isEqualTo: medicationId)
-        .orderBy('scheduledAt', descending: true)
-        .get();
-
-    return query.docs
-        .map((doc) => DoseEvent.fromJson(doc.data(), id: doc.id))
-        .toList();
-  }
-
 }
