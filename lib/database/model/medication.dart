@@ -50,7 +50,7 @@ class Medication implements IEntity {
 
   factory Medication.fromJson(Map<String, dynamic> json, {String? id}) {
     final medication = _$MedicationFromJson(json);
-    // The 'id' from json is ignored, so we set it from the document ID.
+    // id set from document ID
     return medication.copyWith(id: id);
   }
 

@@ -91,8 +91,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
         }
       },
       onError: (error) {
-        // Only show error if it's not about unknown tags
-        // (to avoid spamming when scanning random NFC items)
+        // Skip unknown tag errors
         if (mounted && !error.contains('Unknown NFC tag')) {
           showSnackBar(
             context,

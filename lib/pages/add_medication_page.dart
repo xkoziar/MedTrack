@@ -286,7 +286,7 @@ class _AddMedicationPageState extends State<AddMedicationPage> {
     });
   }
 
-  // Start manual scan - stop background, start persistent session
+  // Start manual NFC scan
   Future<void> _scanNewNfcTag() async {
     if (_isScanning) return;
 

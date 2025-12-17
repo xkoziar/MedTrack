@@ -113,7 +113,7 @@ class NfcWriterService {
 
             await NfcManager.instance.stopSession();
           } catch (e) {
-            print('[NfcWriter] Error reading tag: $e');
+            // ignore read errors silently
           }
         },
       );

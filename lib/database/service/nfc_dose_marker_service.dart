@@ -12,8 +12,7 @@ class NfcDoseMarkerService {
   final _doseEventService = get<DoseEventDatabaseService>();
   final _authService = get<AuthService>();
 
-  /// Process NFC tag scan and mark the appropriate doses.
-  /// Returns a result containing success info or error message.
+  /// Process NFC tag scan and mark doses
   Future<DoseMarkResult> markDosesForTag(String tagId) async {
     final userId = _authService.user?.uid;
     if (userId == null) {
@@ -21,13 +20,13 @@ class NfcDoseMarkerService {
     }
 
     try {
-      // Find the NFC tag (try with and without colons)
+      // Find NFC tag
       final nfcTag = await _findTagWithFallback(userId, tagId);
       if (nfcTag == null) {
         return DoseMarkResult.error('NFC tag not found: $tagId');
       }
 
-      // Get medications assigned to this tag
+      // Get medications for this tag
       final medications = await _medicationService.getUserMedications(userId);
       final assignedMedications = medications
           .where((med) => med.nfcTagId == nfcTag.id)
@@ -37,13 +36,13 @@ class NfcDoseMarkerService {
         return DoseMarkResult.error('No medications assigned to tag "${nfcTag.name}"');
       }
 
-      // Mark doses for each medication
+      // Mark doses per medication
       int markedCount = 0;
       final now = DateTime.now();
 
       for (final medication in assignedMedications) {
         if (!medication.isActive) {
-          print('[NFC] Skipping inactive medication: ${medication.name}');
+          // Skip inactive medications
           continue;
         }
 
@@ -61,8 +60,6 @@ class NfcDoseMarkerService {
           } catch (e) {
             continue;
           }
-        } else {
-          print('[NFC]   No dose found to mark');
         }
       }
 
@@ -98,21 +95,14 @@ class NfcDoseMarkerService {
     return tag;
   }
 
-  /// Find the last scheduled dose before the scan time for a medication
+  /// Find last scheduled dose before scan time
   DateTime? _findLastScheduledDoseBeforeScan(Medication medication, DateTime scanTime) {
     final currentWeekday = scanTime.weekday;
     if (!medication.scheduleDays.contains(currentWeekday)) {
-      print('[NFC]   Not scheduled for today');
-      return null;
-    }
-
-    if (medication.endDate != null && scanTime.isAfter(medication.endDate!)) {
-      print('[NFC]   Past end date');
       return null;
     }
 
     if (scanTime.isBefore(medication.startDate)) {
-      print('[NFC]   Before start date');
       return null;
     }
 
@@ -132,30 +122,23 @@ class NfcDoseMarkerService {
         minute,
       );
 
-      print('[NFC]   Checking time $timeStr -> $scheduledTime');
-      print('[NFC]   Is before scan ($scanTime)? ${scheduledTime.isBefore(scanTime)}');
-
       if (scheduledTime.isBefore(scanTime)) {
         dosesBeforeScan.add(scheduledTime);
-        print('[NFC]   Added to doses before scan');
       }
     }
-
-    print('[NFC]   Total doses before scan: ${dosesBeforeScan.length}');
 
     if (dosesBeforeScan.isEmpty) {
       return null;
     }
 
-    dosesBeforeScan.sort();
-    final selectedDose = dosesBeforeScan.last;
-    print('[NFC]   Selected dose: $selectedDose');
+  dosesBeforeScan.sort();
+  final selectedDose = dosesBeforeScan.last;
 
-    return selectedDose;
+  return selectedDose;
   }
 }
 
-/// Result of attempting to mark doses for an NFC tag
+/// Result of marking doses for NFC tag
 class DoseMarkResult {
   final bool isSuccess;
   final String? tagName;

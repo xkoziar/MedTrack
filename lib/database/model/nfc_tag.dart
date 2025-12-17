@@ -10,7 +10,7 @@ class NfcTag implements IEntity {
   @JsonKey(includeFromJson: false, includeToJson: false)
   final String id;
   final String userId;
-  final String tagId; // The actual NFC chip ID (e.g., '04:A2:7F:19:CC:2B:80')
+  final String tagId;
   final String name; // User-friendly name for the chip
   final List<String> medicationIds; // List of medication IDs assigned to this chip
   final DateTime createdAt;

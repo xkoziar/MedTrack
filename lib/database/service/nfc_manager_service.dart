@@ -50,7 +50,7 @@ class NfcManagerService {
     }
   }
 
-  // Start a persistent NFC session that doesnt auto-stop after each tag
+  // Start persistent NFC session
   Future<void> startPersistentSession({
     required Function(String tagId, NfcTag nfcTag) onTagDiscovered,
   }) async {

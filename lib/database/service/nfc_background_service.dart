@@ -32,7 +32,7 @@ class NfcBackgroundService {
     _ignoreScans = false;
   }
 
-  /// Start listening for NFC tags continuously in the foreground
+  /// Start continuous NFC foreground listening
   Future<void> startListening({
     required Function(String tagName, int medicationsMarked) onDoseMarked,
     required Function(String error) onError,
@@ -78,7 +78,7 @@ class NfcBackgroundService {
     await _nfcManager.stopSession();
   }
 
-  /// Handle NFC tag scan by delegating to the dose marker service
+  /// Handle NFC tag scan through dose marker service
   Future<void> _handleNfcTagScanned(
     String tagId, {
     required Function(String tagName, int medicationsMarked) onDoseMarked,
@@ -95,7 +95,7 @@ class NfcBackgroundService {
     }
   }
 
-  /// One-time scan to mark doses as taken
+  /// Onetime scan to mark doses
   Future<void> scanAndMarkDose({
     required Function(String tagName, int medicationsMarked) onSuccess,
     required Function(String error) onError,

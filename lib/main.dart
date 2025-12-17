@@ -11,7 +11,7 @@ Future<void> main() async {
 
   IocContainer.initialize();
 
-  // Initialize NFC background channel to handle tags when app is closed/background
+  // Initialize NFC background channel
   NfcBackgroundChannel.initialize();
 
   runApp(AppWrapper());

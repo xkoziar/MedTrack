@@ -9,9 +9,9 @@ import 'package:med_track/utils/constants.dart';
 import 'package:med_track/utils/snackbar_utils.dart';
 import 'package:nfc_manager/nfc_manager.dart' as nfc_manager;
 
-/// Reusable dialogs for NFC tag operations
+/// Reusable NFC tag dialogs
 class NfcTagDialogs {
-  /// Show a dialog to name a new NFC tag and create it
+  /// Show dialog to name and create new NFC tag
   static Future<NfcTag?> showNameNewTagDialog(
     BuildContext context,
     String tagId, {
@@ -170,7 +170,7 @@ class NfcTagDialogs {
     );
   }
 
-  /// Show a confirmation dialog before deleting an NFC tag
+  /// Show confirmation dialog before deleting NFC tag
   static Future<bool> showDeleteTagDialog(
     BuildContext context,
     String tagName,
@@ -204,7 +204,7 @@ class NfcTagDialogs {
     return confirmed ?? false;
   }
 
-  /// Show a dialog with options for an existing tag (rename/delete)
+  /// Show dialog with tag options (rename/delete)
   static Future<void> showTagOptionsDialog(
     BuildContext context,
     NfcTag tag, {

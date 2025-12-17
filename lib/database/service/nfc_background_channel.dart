@@ -2,8 +2,7 @@ import 'package:flutter/services.dart';
 import 'package:med_track/database/ioc/ioc_container.dart';
 import 'package:med_track/database/service/nfc_dose_marker_service.dart';
 
-/// Handles NFC tag scans that come from the native Android side
-/// when the app is launched via NFC intent (background/closed state).
+/// Handles NFC tag scans from native Android
 class NfcBackgroundChannel {
   static const MethodChannel _channel = MethodChannel('med_track/nfc_background');
 
@@ -20,16 +19,10 @@ class NfcBackgroundChannel {
 
   static Future<void> _processNfcTag(String tagId) async {
     try {
-      final doseMarker = get<NfcDoseMarkerService>();
-      final result = await doseMarker.markDosesForTag(tagId);
-      
-      if (result.isSuccess) {
-        print('[NFC Background] Successfully marked ${result.medicationsMarked} doses for ${result.tagName}');
-      } else {
-        print('[NFC Background] Error: ${result.errorMessage}');
-      }
+  final doseMarker = get<NfcDoseMarkerService>();
+  await doseMarker.markDosesForTag(tagId);
     } catch (e) {
-      print('[NFC Background] Unexpected error: $e');
+      // Error suppressed
     }
   }
 }
