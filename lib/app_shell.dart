@@ -26,10 +26,10 @@ class _AppShellState extends State<AppShell> {
       body: IndexedStack(
         index: _index,
         children: [
-          HistoryPage(),
-          ProfilePage(key: const ValueKey('profile_page')),
-          MedicationPage(key: const ValueKey('medication_page')),
           const HomePage(key: ValueKey('home_page')),
+          HistoryPage(),
+          MedicationPage(key: const ValueKey('medication_page')),
+          ProfilePage(key: const ValueKey('profile_page')),
         ],
       ),
       bottomNavigationBar: BottomNavigationBar(
@@ -38,16 +38,16 @@ class _AppShellState extends State<AppShell> {
 
         type: BottomNavigationBarType.fixed,
         items: const [
+          BottomNavigationBarItem(icon: Icon(Icons.home), label: "Home"),
           BottomNavigationBarItem(
             icon: Icon(Icons.history_rounded),
             label: "History",
           ),
-          BottomNavigationBarItem(icon: Icon(Icons.person), label: "Profile"),
           BottomNavigationBarItem(
             icon: Icon(Icons.list_rounded),
             label: "MedList",
           ),
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: "Home"),
+          BottomNavigationBarItem(icon: Icon(Icons.person), label: "Profile"),
         ],
       ),
     );
