@@ -1,6 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import '../model/nfc_tag.dart';
-import '../repository/firestore_repository.dart';
+import '../../model/nfc_tag.dart';
+import '../../repository/firestore_repository.dart';
 
 class NfcTagDatabaseService extends FirestoreRepository<NfcTag> {
   NfcTagDatabaseService()

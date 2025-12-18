@@ -6,7 +6,7 @@ import 'package:med_track/database/ioc/ioc_container.dart';
 import 'package:med_track/database/model/nfc_tag.dart';
 import 'package:med_track/database/service/auth_service.dart';
 import 'package:med_track/database/service/medication_database_service.dart';
-import 'package:med_track/database/service/nfc_tag_database_service.dart';
+import 'package:med_track/database/service/nfc/nfc_tag_database_service.dart';
 import 'package:med_track/utils/constants.dart';
 import 'package:med_track/utils/snackbar_utils.dart';
 import 'package:med_track/pages/home/empty_state.dart';

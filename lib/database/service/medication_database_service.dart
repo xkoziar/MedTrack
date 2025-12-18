@@ -1,8 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:med_track/database/service/dose_event_update_service.dart';
+import 'package:med_track/database/service/dose_event/dose_event_update_service.dart';
 import '../model/medication.dart';
 import '../repository/firestore_repository.dart';
-import 'dose_event_creating_service.dart';
+import 'dose_event/dose_event_creating_service.dart';
 
 class MedicationDatabaseService extends FirestoreRepository<Medication> {
   MedicationDatabaseService()

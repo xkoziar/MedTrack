@@ -1,7 +1,7 @@
 import 'package:med_track/database/ioc/ioc_container.dart';
 import 'package:med_track/database/model/dose_event.dart';
 import 'package:med_track/database/model/medication.dart';
-import 'package:med_track/database/service/dose_event_database_service.dart';
+import 'package:med_track/database/service/dose_event/dose_event_database_service.dart';
 import 'package:med_track/database/service/medication_database_service.dart';
 
 void createMockData() {

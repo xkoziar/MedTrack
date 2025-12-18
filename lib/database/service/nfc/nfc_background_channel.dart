@@ -1,6 +1,6 @@
 import 'package:flutter/services.dart';
 import 'package:med_track/database/ioc/ioc_container.dart';
-import 'package:med_track/database/service/nfc_dose_marker_service.dart';
+import 'package:med_track/database/service/nfc/nfc_dose_marker_service.dart';
 
 /// Handles NFC tag scans from native Android
 class NfcBackgroundChannel {

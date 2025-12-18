@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'package:med_track/database/ioc/ioc_container.dart';
-import 'package:med_track/database/service/nfc_dose_marker_service.dart';
-import 'package:med_track/database/service/nfc_manager_service.dart';
+import 'package:med_track/database/service/nfc/nfc_dose_marker_service.dart';
+import 'package:med_track/database/service/nfc/nfc_manager_service.dart';
 import 'package:nfc_manager/nfc_manager.dart' as nfc_manager;
 
 

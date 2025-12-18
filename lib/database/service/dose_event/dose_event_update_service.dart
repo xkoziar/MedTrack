@@ -1,9 +1,9 @@
 import 'package:med_track/database/ioc/ioc_container.dart';
 import 'package:med_track/database/model/medication.dart';
-import 'package:med_track/database/service/dose_event_creating_service.dart';
-import 'package:med_track/database/service/dose_event_database_service.dart';
+import 'package:med_track/database/service/dose_event/dose_event_creating_service.dart';
+import 'package:med_track/database/service/dose_event/dose_event_database_service.dart';
 
-import 'auth_service.dart';
+import '../auth_service.dart';
 
 class DoseEventUpdateService {
   final _doseEventService = get<DoseEventDatabaseService>();

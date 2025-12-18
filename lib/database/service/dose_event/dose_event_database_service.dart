@@ -1,6 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import '../model/dose_event.dart';
-import '../repository/firestore_repository.dart';
+import '../../model/dose_event.dart';
+import '../../repository/firestore_repository.dart';
 
 class DoseEventDatabaseService extends FirestoreRepository<DoseEvent> {
   DoseEventDatabaseService()

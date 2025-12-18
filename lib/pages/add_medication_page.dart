@@ -18,8 +18,8 @@ import 'package:nfc_manager/nfc_manager.dart' as nfc_manager;
 
 import '../database/service/auth_service.dart';
 import '../database/service/medication_database_service.dart';
-import '../database/service/nfc_tag_database_service.dart';
-import '../database/service/nfc_background_service.dart';
+import '../database/service/nfc/nfc_tag_database_service.dart';
+import '../database/service/nfc/nfc_background_service.dart';
 
 class AddMedicationPage extends StatefulWidget {
   final Medication? medication;

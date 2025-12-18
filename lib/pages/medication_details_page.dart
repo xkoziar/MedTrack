@@ -12,7 +12,7 @@ import 'package:med_track/utils/constants.dart';
 import 'package:med_track/utils/handling_stream_builder.dart';
 
 import '../database/ioc/ioc_container.dart';
-import '../database/service/dose_event_database_service.dart';
+import '../database/service/dose_event/dose_event_database_service.dart';
 import '../database/service/medication_database_service.dart';
 import '../utils/helpers/medication_scheduling.dart';
 import '../utils/snackbar_utils.dart';
