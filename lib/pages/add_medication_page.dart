@@ -1,18 +1,25 @@
 import 'package:flutter/material.dart';
 import 'package:med_track/components/add_medication/date_selector.dart';
 import 'package:med_track/components/add_medication/day_selector.dart';
+import 'package:med_track/components/add_medication/nfc_tag_selector.dart';
 import 'package:med_track/components/add_medication/time_selector.dart';
 import 'package:med_track/components/common/buttons/primary_button.dart';
 import 'package:med_track/components/common/buttons/secondary_button.dart';
 import 'package:med_track/components/common/custom_text_field.dart';
 import 'package:med_track/components/common/gradient_header.dart';
+import 'package:med_track/components/nfc/nfc_tag_dialogs.dart';
 import 'package:med_track/database/ioc/ioc_container.dart';
 import 'package:med_track/database/model/medication.dart';
+import 'package:med_track/database/model/nfc_tag.dart';
 import 'package:med_track/utils/constants.dart';
+import 'package:med_track/utils/snackbar_utils.dart';
+import 'package:med_track/utils/nfc_tag_formatter.dart';
+import 'package:nfc_manager/nfc_manager.dart' as nfc_manager;
 
 import '../database/service/auth_service.dart';
 import '../database/service/medication_database_service.dart';
-import '../utils/snackbar_utils.dart';
+import '../database/service/nfc_tag_database_service.dart';
+import '../database/service/nfc_background_service.dart';
 
 class AddMedicationPage extends StatefulWidget {
   final Medication? medication;
@@ -30,6 +37,7 @@ class _AddMedicationPageState extends State<AddMedicationPage> {
   final _dosageController = TextEditingController();
   final _medicationService = get<MedicationDatabaseService>();
   final _authService = get<AuthService>();
+  final _nfcTagService = get<NfcTagDatabaseService>();
 
   late bool _isEditMode;
   final Set<int> _selectedDays = {};
@@ -38,10 +46,16 @@ class _AddMedicationPageState extends State<AddMedicationPage> {
   bool _isSaving = false;
   late bool _isActive;
 
+  String? _selectedNfcTagId;
+  List<NfcTag> _availableTags = [];
+  bool _isLoadingTags = false;
+  bool _isScanning = false;
+
   @override
   void initState() {
     super.initState();
     _isEditMode = widget.medication != null;
+    _loadNfcTags();
 
     if (_isEditMode) {
       final med = widget.medication!;
@@ -50,6 +64,7 @@ class _AddMedicationPageState extends State<AddMedicationPage> {
       _dosageController.text = med.dosage;
       _startDate = med.startDate;
       _isActive = med.isActive;
+      _selectedNfcTagId = med.nfcTagId;
       _selectedDays.addAll(med.scheduleDays);
       _selectedTimes.addAll(
         med.scheduleTimes.map((timeStr) {
@@ -67,11 +82,63 @@ class _AddMedicationPageState extends State<AddMedicationPage> {
     }
   }
 
+
+
+  Future<void> _loadNfcTags() async {
+    final userId = _authService.user?.uid;
+    if (userId == null) return;
+
+    setState(() => _isLoadingTags = true);
+    try {
+      final tags = await _nfcTagService.getUserTags(userId);
+      if (mounted) {
+        setState(() {
+          _availableTags = tags;
+          _isLoadingTags = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isLoadingTags = false);
+      }
+    }
+  }
+
+  Future<NfcTag?> _findTagWithFallback(String userId, String identifier) async {
+    var tag = await _nfcTagService.findByTagId(userId, identifier);
+
+    if (tag == null && identifier.contains(':')) {
+      final normalizedId = NfcTagFormatter.normalizeTagId(identifier);
+      tag = await _nfcTagService.findByTagId(userId, normalizedId);
+    }
+
+    return tag;
+  }
+
+  Future<void> _startPersistentNfcSession() async {
+    final isAvailable = await nfc_manager.NfcManager.instance.isAvailable();
+    if (!isAvailable) {
+      setState(() => _isScanning = false);
+      if (mounted) {
+        showSnackBar(context, 'NFC not available', backgroundColor: AppColors.danger);
+      }
+      return;
+    }
+
+    final nfcService = get<NfcBackgroundService>();
+
+    nfcService.setManualScanCallback((nfc_manager.NfcTag tag) async {
+      nfcService.clearManualScanCallback();
+      await _handleTagDiscovered(tag);
+    });
+  }
+
   @override
   void dispose() {
     _nameController.dispose();
     _descriptionController.dispose();
     _dosageController.dispose();
+    get<NfcBackgroundService>().stopIgnoringScans();
     super.dispose();
   }
 
@@ -124,6 +191,7 @@ class _AddMedicationPageState extends State<AddMedicationPage> {
           isActive: _isActive,
           scheduleDays: scheduleDays,
           scheduleTimes: scheduleTimes,
+          nfcTagId: _selectedNfcTagId,
           updatedAt: DateTime.now(),
         );
         await _medicationService.update(medicationToSave.id, medicationToSave);
@@ -142,6 +210,7 @@ class _AddMedicationPageState extends State<AddMedicationPage> {
           isActive: _isActive,
           scheduleDays: scheduleDays,
           scheduleTimes: scheduleTimes,
+          nfcTagId: _selectedNfcTagId,
         );
         await _medicationService.create(medicationToSave);
       }
@@ -217,6 +286,178 @@ class _AddMedicationPageState extends State<AddMedicationPage> {
     });
   }
 
+  // Start manual NFC scan
+  Future<void> _scanNewNfcTag() async {
+    if (_isScanning) return;
+
+    final nfcService = get<NfcBackgroundService>();
+    await nfcService.startIgnoringScans();
+
+    setState(() => _isScanning = true);
+
+    if (!mounted) return;
+    showSnackBar(context, 'Ready to scan - hold NFC tag near phone');
+
+    await _startPersistentNfcSession();
+  }
+
+  // Handle tag discovered by persistent NFC session
+  Future<void> _handleTagDiscovered(nfc_manager.NfcTag nfcTag) async {
+    final identifier = NfcTagFormatter.extractTagId(nfcTag);
+    if (identifier == null) {
+      setState(() => _isScanning = false);
+      return;
+    }
+
+    if (!mounted) return;
+    setState(() => _isScanning = false);
+
+    final userId = _authService.user?.uid;
+    if (userId == null) {
+      showSnackBar(context, 'User not authenticated', backgroundColor: AppColors.danger);
+      return;
+    }
+
+    final existingTag = await _findTagWithFallback(userId, identifier);
+
+    if (!mounted) return;
+
+    if (existingTag != null) {
+      setState(() {
+        _selectedNfcTagId = existingTag.id;
+        _isScanning = false;
+      });
+      showSnackBar(
+        context,
+        'Selected existing tag: ${existingTag.name}',
+        backgroundColor: AppColors.success,
+      );
+
+      final nfcService = get<NfcBackgroundService>();
+      nfcService.stopIgnoringScans();
+    } else {
+      final newTag = await NfcTagDialogs.showNameNewTagDialog(
+        context,
+        identifier,
+        nfcTag: nfcTag,
+        pauseScanning: true,
+      );
+
+      if (newTag != null) {
+        setState(() {
+          _selectedNfcTagId = newTag.id;
+        });
+        await _loadNfcTags();
+      }
+    }
+  }
+
+
+
+  Future<void> _confirmDeleteTag(BuildContext modalContext, NfcTag tag) async {
+    final confirmed = await NfcTagDialogs.showDeleteTagDialog(context, tag.name);
+
+    if (confirmed) {
+      try {
+        await _nfcTagService.delete(tag.id);
+
+        if (!modalContext.mounted) return;
+        Navigator.of(modalContext).pop(); // Close bottom sheet
+
+        // Clear selection if deleted tag was selected
+        if (_selectedNfcTagId == tag.id) {
+          setState(() => _selectedNfcTagId = null);
+        }
+        await _loadNfcTags();
+
+        if (!mounted) return;
+        showSnackBar(
+          context,
+          'Tag "${tag.name}" deleted',
+          backgroundColor: AppColors.success,
+        );
+      } catch (e) {
+        if (!mounted) return;
+        showSnackBar(
+          context,
+          'Error deleting tag: $e',
+          backgroundColor: AppColors.danger,
+        );
+      }
+    }
+  }
+
+  void _showNfcTagPicker() {
+    showModalBottomSheet(
+      context: context,
+      builder: (ctx) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(AppSpacing.lg),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+            Text('Select NFC Tag', style: AppTextStyles.heading2),
+            const SizedBox(height: AppSpacing.md),
+            if (_availableTags.isEmpty)
+              const Padding(
+                padding: EdgeInsets.all(AppSpacing.lg),
+                child: Text(
+                  'No NFC tags.\nScan a new one below.',
+                  textAlign: TextAlign.center,
+                ),
+              )
+            else
+              ...(_availableTags.map((tag) => ListTile(
+                    leading: Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        gradient: AppGradients.green,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: const Icon(Icons.nfc, color: Colors.white),
+                    ),
+                    title: Text(tag.name),
+                    trailing: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        if (_selectedNfcTagId == tag.id)
+                          Icon(Icons.check_circle, color: AppColors.success),
+                        IconButton(
+                          icon: Icon(Icons.delete_outline, color: AppColors.danger),
+                          onPressed: () => _confirmDeleteTag(ctx, tag),
+                        ),
+                      ],
+                    ),
+                    onTap: () {
+                      setState(() => _selectedNfcTagId = tag.id);
+                      Navigator.of(ctx).pop();
+                    },
+                  ))),
+            const Divider(),
+            OutlinedButton.icon(
+              onPressed: () {
+                Navigator.of(ctx).pop();
+                _scanNewNfcTag();
+              },
+              icon: const Icon(Icons.nfc),
+              label: const Text('Scan New NFC Tag'),
+            ),
+            if (_selectedNfcTagId != null)
+              TextButton(
+                onPressed: () {
+                  setState(() => _selectedNfcTagId = null);
+                  Navigator.of(ctx).pop();
+                },
+                child: const Text('Remove NFC Tag'),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -274,6 +515,21 @@ class _AddMedicationPageState extends State<AddMedicationPage> {
                       selectedDate: _startDate,
                       onDateSelected: () => _selectDate(context),
                     ),
+                    const SizedBox(height: AppSpacing.lg),
+                    // NFC Tag Selection
+                    Text(
+                      'NFC Tag (Optional)',
+                      style: AppTextStyles.bodyMediumSemiBold,
+                    ),
+                    const SizedBox(height: AppSpacing.xs),
+                    Text(
+                      'Assign an NFC chip to quickly mark this medication as taken',
+                      style: AppTextStyles.bodySmall.copyWith(
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.md),
+                    _buildNfcTagSelector(),
                     const SizedBox(height: AppSpacing.xxl),
                     PrimaryGradientButton(
                       label: _isSaving
@@ -294,6 +550,16 @@ class _AddMedicationPageState extends State<AddMedicationPage> {
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildNfcTagSelector() {
+    return NfcTagSelector(
+      selectedNfcTagId: _selectedNfcTagId,
+      availableTags: _availableTags,
+      isScanning: _isScanning,
+      isLoadingTags: _isLoadingTags,
+      onShowPicker: _showNfcTagPicker,
     );
   }
 }

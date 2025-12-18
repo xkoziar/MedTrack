@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:med_track/components/common/active_chip.dart';
 import 'package:med_track/components/common/gradient_header.dart';
-import 'package:med_track/components/nfc_card.dart';
 import 'package:med_track/components/common/buttons/primary_button.dart';
 import 'package:med_track/components/common/buttons/secondary_button.dart';
 import 'package:med_track/components/medication/dose_history_card.dart';
@@ -20,16 +19,12 @@ import '../utils/snackbar_utils.dart';
 
 class MedicationDetailPage extends StatelessWidget {
   final Medication medication;
-  final String? nfcTagId;
-  final VoidCallback? onPairNfc;
   final _medicationService = get<MedicationDatabaseService>();
   final _doseEventService = get<DoseEventDatabaseService>();
 
   MedicationDetailPage({
     super.key,
     required this.medication,
-    this.nfcTagId,
-    this.onPairNfc,
   });
 
   Future<void> _handleDelete(BuildContext context) async {
@@ -88,8 +83,6 @@ class MedicationDetailPage extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   MedicationInfoCard(medication: medication),
-                  const SizedBox(height: AppSpacing.xl),
-                  NfcPairCard(nfcTagId: nfcTagId, onPair: onPairNfc),
                   const SizedBox(height: AppSpacing.xl),
                   HandlingStreamBuilder<List<DoseEvent>>(
                     stream: _doseEventService

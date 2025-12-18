@@ -24,7 +24,7 @@ class MedicationItem extends StatelessWidget {
         onTap: onTap,
         borderRadius: BorderRadius.circular(16),
         child: AppCard(
-          color: isTaken ? AppColors.success.withOpacity(0.05) : Colors.white,
+          color: isTaken ? AppColors.success.withAlpha(13) : Colors.white,
           child: Row(
             children: [
               Container(
@@ -35,7 +35,7 @@ class MedicationItem extends StatelessWidget {
                       ? LinearGradient(
                           colors: [
                             AppColors.success,
-                            AppColors.success.withOpacity(0.7),
+                            AppColors.success.withAlpha(179),
                           ],
                         )
                       : null,
@@ -99,7 +99,7 @@ class MedicationItem extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: isTaken
                       ? AppColors.successBackground
-                      : AppColors.primary.withOpacity(0.1),
+                      : AppColors.primary.withAlpha(25),
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Text(

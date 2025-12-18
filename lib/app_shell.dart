@@ -12,12 +12,11 @@ class AppShell extends StatefulWidget {
 }
 
 class _AppShellState extends State<AppShell> {
-  int _index = 0;
+  int _index = 3;
 
   @override
   void initState() {
     super.initState();
-
     //createMockData(); <--- uprav user id
   }
 
@@ -27,10 +26,10 @@ class _AppShellState extends State<AppShell> {
       body: IndexedStack(
         index: _index,
         children: [
-          const HomePage(key: ValueKey('home_page')),
           HistoryPage(),
-          MedicationPage(key: const ValueKey('medication_page')),
           ProfilePage(key: const ValueKey('profile_page')),
+          MedicationPage(key: const ValueKey('medication_page')),
+          const HomePage(key: ValueKey('home_page')),
         ],
       ),
       bottomNavigationBar: BottomNavigationBar(
