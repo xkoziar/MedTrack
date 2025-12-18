@@ -286,7 +286,6 @@ class _AddMedicationPageState extends State<AddMedicationPage> {
     });
   }
 
-  // Start manual NFC scan
   Future<void> _scanNewNfcTag() async {
     if (_isScanning) return;
 
@@ -301,7 +300,6 @@ class _AddMedicationPageState extends State<AddMedicationPage> {
     await _startPersistentNfcSession();
   }
 
-  // Handle tag discovered by persistent NFC session
   Future<void> _handleTagDiscovered(nfc_manager.NfcTag nfcTag) async {
     final identifier = NfcTagFormatter.extractTagId(nfcTag);
     if (identifier == null) {
@@ -362,9 +360,8 @@ class _AddMedicationPageState extends State<AddMedicationPage> {
         await _nfcTagService.delete(tag.id);
 
         if (!modalContext.mounted) return;
-        Navigator.of(modalContext).pop(); // Close bottom sheet
+        Navigator.of(modalContext).pop();
 
-        // Clear selection if deleted tag was selected
         if (_selectedNfcTagId == tag.id) {
           setState(() => _selectedNfcTagId = null);
         }
@@ -516,7 +513,6 @@ class _AddMedicationPageState extends State<AddMedicationPage> {
                       onDateSelected: () => _selectDate(context),
                     ),
                     const SizedBox(height: AppSpacing.lg),
-                    // NFC Tag Selection
                     Text(
                       'NFC Tag (Optional)',
                       style: AppTextStyles.bodyMediumSemiBold,

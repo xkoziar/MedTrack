@@ -27,7 +27,6 @@ class AppWrapper extends StatelessWidget {
           }
 
           if (snapshot.hasData) {
-            // Use a key to force rebuild when user changes
             return AppShell(key: ValueKey(snapshot.data?.id));
           }
 

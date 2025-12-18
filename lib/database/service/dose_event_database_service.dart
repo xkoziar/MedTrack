@@ -189,7 +189,6 @@ class DoseEventDatabaseService extends FirestoreRepository<DoseEvent> {
           ),
         );
       } else {
-        // Update the event to pending if unmarking as taken
         await update(
           existingEvent.id,
           existingEvent.copyWith(
@@ -223,7 +222,6 @@ class DoseEventDatabaseService extends FirestoreRepository<DoseEvent> {
         .where('userId', isEqualTo: userId)
         .get();
 
-    // Filter in memory to find matching event
     final events = query.docs
         .map((doc) => DoseEvent.fromJson(doc.data(), id: doc.id))
         .where(
@@ -240,7 +238,6 @@ class DoseEventDatabaseService extends FirestoreRepository<DoseEvent> {
     return events.isEmpty ? null : events.first;
   }
 
-  // Stream of todays events for a user
   Stream<List<DoseEvent>> observeTodayEvents(String userId) {
     final now = DateTime.now();
     final startOfDay = DateTime(now.year, now.month, now.day);
@@ -267,7 +264,6 @@ class DoseEventDatabaseService extends FirestoreRepository<DoseEvent> {
         });
   }
 
-  // Get todays dose events for a user
   Future<List<DoseEvent>> getTodayEvents(String userId) async {
     final now = DateTime.now();
     final startOfDay = DateTime(now.year, now.month, now.day);

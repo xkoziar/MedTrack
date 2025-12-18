@@ -52,7 +52,6 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
   void didChangeAppLifecycleState(AppLifecycleState state) {
     super.didChangeAppLifecycleState(state);
 
-    // Start/stop NFC listening based on app state
     if (state == AppLifecycleState.resumed) {
       _startNfcListening();
     } else if (state == AppLifecycleState.paused) {
@@ -91,7 +90,6 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
         }
       },
       onError: (error) {
-        // Skip unknown tag errors
         if (mounted && !error.contains('Unknown NFC tag')) {
           showSnackBar(
             context,

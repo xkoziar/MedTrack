@@ -11,8 +11,8 @@ class NfcTag implements IEntity {
   final String id;
   final String userId;
   final String tagId;
-  final String name; // User-friendly name for the chip
-  final List<String> medicationIds; // List of medication IDs assigned to this chip
+  final String name;
+  final List<String> medicationIds;
   final DateTime createdAt;
   final DateTime updatedAt;
 

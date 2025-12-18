@@ -18,7 +18,7 @@ class Medication implements IEntity {
   final bool isActive;
   final List<int> scheduleDays;
   final List<String> scheduleTimes;
-  final String? nfcTagId; // Optional NFC tag assignment
+  final String? nfcTagId;
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -50,7 +50,6 @@ class Medication implements IEntity {
 
   factory Medication.fromJson(Map<String, dynamic> json, {String? id}) {
     final medication = _$MedicationFromJson(json);
-    // id set from document ID
     return medication.copyWith(id: id);
   }
 

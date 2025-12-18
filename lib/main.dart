@@ -11,7 +11,6 @@ Future<void> main() async {
 
   IocContainer.initialize();
 
-  // Initialize NFC background channel
   NfcBackgroundChannel.initialize();
 
   runApp(AppWrapper());

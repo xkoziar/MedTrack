@@ -16,7 +16,7 @@ import 'package:med_track/components/nfc/nfc_tag_card.dart';
 import 'package:med_track/pages/home/empty_state.dart';
 
 class NfcManagementPage extends StatefulWidget {
-  final Medication? medication; // If provided, auto-assign to this medication
+  final Medication? medication;
 
   const NfcManagementPage({super.key, this.medication});
 
@@ -108,20 +108,17 @@ class _NfcManagementPageState extends State<NfcManagementPage> {
     final userId = _authService.user?.uid;
     if (userId == null) return;
 
-    // Check if tag already exists
     final existingTag = await _nfcTagService.findByTagId(userId, tagId);
 
     if (!mounted) return;
 
     if (existingTag != null) {
-      // Tag exists, show options to manage it
       NfcTagDialogs.showTagOptionsDialog(
         context,
         existingTag,
         onUpdated: _loadUserData,
       );
     } else {
-      // New tag, prompt for name
       final newTag = await NfcTagDialogs.showNameNewTagDialog(
         context,
         tagId,
@@ -231,7 +228,6 @@ class _NfcManagementPageState extends State<NfcManagementPage> {
   }
 }
 
-// Separate page for managing a specific NFC tag
 class ManageNfcTagPage extends StatefulWidget {
   final NfcTag tag;
 
@@ -277,7 +273,6 @@ class _ManageNfcTagPageState extends State<ManageNfcTagPage> {
       await _nfcTagService.addMedicationToTag(_tag.id, medicationId);
     }
 
-    // Reload tag
     final updatedTag = await _nfcTagService.get(_tag.id);
     if (updatedTag != null && mounted) {
       setState(() {

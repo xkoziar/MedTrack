@@ -122,7 +122,6 @@ class NfcTagDialogs {
       ),
     );
 
-    // Resume NFC scanning if it was paused
     if (pauseScanning) {
       nfcService.stopIgnoringScans();
     }
