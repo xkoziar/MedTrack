@@ -145,9 +145,7 @@ class DoseEventDatabaseService extends FirestoreRepository<DoseEvent> {
     for (final doc in snapshot.docs) {
       final event = DoseEvent.fromJson(doc.data(), id: doc.id);
       if (event.scheduledAt.isBefore(now)) {
-        batch.update(doc.reference, {
-          'status': DoseStatus.missed.name,
-        });
+        batch.update(doc.reference, {'status': DoseStatus.missed.name});
       }
     }
 
@@ -184,18 +182,22 @@ class DoseEventDatabaseService extends FirestoreRepository<DoseEvent> {
       if (taken) {
         await update(
           existingEvent.id,
-          DoseEvent(
-            id: existingEvent.id,
-            userId: userId,
-            medicationId: medicationId,
-            scheduledAt: scheduledAt,
+          existingEvent.copyWith(
             takenAt: DateTime.now(),
             status: DoseStatus.taken,
+            updatedAt: DateTime.now(),
           ),
         );
       } else {
-        // Delete the event if unmarking as taken
-        await delete(existingEvent.id);
+        // Update the event to pending if unmarking as taken
+        await update(
+          existingEvent.id,
+          existingEvent.copyWith(
+            takenAt: null,
+            status: DoseStatus.pending,
+            updatedAt: DateTime.now(),
+          ),
+        );
       }
     } else if (taken) {
       // Create new event
@@ -209,7 +211,6 @@ class DoseEventDatabaseService extends FirestoreRepository<DoseEvent> {
       await create(event);
     }
   }
-
 
   // Check if a dose event exists for a specific schedule
   Future<DoseEvent?> findEventBySchedule({
@@ -227,13 +228,13 @@ class DoseEventDatabaseService extends FirestoreRepository<DoseEvent> {
         .map((doc) => DoseEvent.fromJson(doc.data(), id: doc.id))
         .where(
           (event) =>
-      event.medicationId == medicationId &&
-          event.scheduledAt.year == scheduledAt.year &&
-          event.scheduledAt.month == scheduledAt.month &&
-          event.scheduledAt.day == scheduledAt.day &&
-          event.scheduledAt.hour == scheduledAt.hour &&
-          event.scheduledAt.minute == scheduledAt.minute,
-    )
+              event.medicationId == medicationId &&
+              event.scheduledAt.year == scheduledAt.year &&
+              event.scheduledAt.month == scheduledAt.month &&
+              event.scheduledAt.day == scheduledAt.day &&
+              event.scheduledAt.hour == scheduledAt.hour &&
+              event.scheduledAt.minute == scheduledAt.minute,
+        )
         .toList();
 
     return events.isEmpty ? null : events.first;
@@ -250,22 +251,21 @@ class DoseEventDatabaseService extends FirestoreRepository<DoseEvent> {
         .where('userId', isEqualTo: userId)
         .snapshots()
         .map((snapshot) {
-      // Filter in memory to avoid needing a composite index
-      return snapshot.docs
-          .map((doc) => DoseEvent.fromJson(doc.data(), id: doc.id))
-          .where(
-            (event) =>
-        event.scheduledAt.isAfter(
-          startOfDay.subtract(const Duration(seconds: 1)),
-        ) &&
-            event.scheduledAt.isBefore(
-              endOfDay.add(const Duration(seconds: 1)),
-            ),
-      )
-          .toList();
-    });
+          // Filter in memory to avoid needing a composite index
+          return snapshot.docs
+              .map((doc) => DoseEvent.fromJson(doc.data(), id: doc.id))
+              .where(
+                (event) =>
+                    event.scheduledAt.isAfter(
+                      startOfDay.subtract(const Duration(seconds: 1)),
+                    ) &&
+                    event.scheduledAt.isBefore(
+                      endOfDay.add(const Duration(seconds: 1)),
+                    ),
+              )
+              .toList();
+        });
   }
-
 
   // Get todays dose events for a user
   Future<List<DoseEvent>> getTodayEvents(String userId) async {
@@ -283,13 +283,13 @@ class DoseEventDatabaseService extends FirestoreRepository<DoseEvent> {
         .map((doc) => DoseEvent.fromJson(doc.data(), id: doc.id))
         .where(
           (event) =>
-      event.scheduledAt.isAfter(
-        startOfDay.subtract(const Duration(seconds: 1)),
-      ) &&
-          event.scheduledAt.isBefore(
-            endOfDay.add(const Duration(seconds: 1)),
-          ),
-    )
+              event.scheduledAt.isAfter(
+                startOfDay.subtract(const Duration(seconds: 1)),
+              ) &&
+              event.scheduledAt.isBefore(
+                endOfDay.add(const Duration(seconds: 1)),
+              ),
+        )
         .toList();
   }
 }
