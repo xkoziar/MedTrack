@@ -1,16 +1,72 @@
-# med_track
+# MedTrack
 
-Mobilní a webová aplikace pro sledování užívání léků. Pomáhá uživatelům nezapomínat na pravidelné dávky prostřednictvím připomínek a jednoduchého záznamu o užití. Volitelně lze použít NFC štítek nalepený na krabičce s léky pro rychlé potvrzení užití. Cílem je poskytnout přehledný systém pro evidenci léků, dávkování a sledování historie užívání.
+A mobile and web application for tracking medication intake. Helps users remember their regular doses through reminders and simple usage logging. Optionally supports NFC tags attached to medication packaging for quick dose confirmation.
+
+**Platforms:** Android, Web
+**Authors:** René Češka, Ivan Yatskiv
+
+## Features
+
+### Core Functionality
+- **Authentication** - User registration and login with Firebase Authentication
+- **Home Dashboard** - View today's scheduled doses with status indicators
+- **Medication Management** - Add, edit, and delete medications with custom dosing schedules
+- **Medication Details** - View dosing schedule, history, and manage NFC tags
+- **Dose History** - Browse complete medication intake history with filtering
+- **Adherence Statistics** - Track medication adherence rates and missed doses
+- **User Profile** - Manage account settings and notification preferences
+
+### Advanced Features
+- **NFC Integration** - Quick dose confirmation by tapping NFC tags on medication packaging
+- **Smart Notifications** - Configurable reminders for scheduled doses
+- **Cloud Sync** - Automatic data synchronization across devices using Firebase
+- **Adherence Tracking** - Calculate and display medication adherence percentages
+- **Virtual Dose Detection** - Automatically mark missed doses based on schedule
+
+## Data Model
+
+The application manages the following entities:
+
+- **User** - Account information and notification settings
+- **Medication** - Name, description, dosage, and schedule times
+- **Dose Event** - Individual dose instances with timestamp and status
+- **Notification Settings** - Reminder configuration and preferences
+- **NFC Tag** - Tag identifiers linked to medications
 
 ## Getting Started
 
-This project is a starting point for a Flutter application.
+### Prerequisites
 
-A few resources to get you started if this is your first Flutter project:
+- Flutter SDK 3.9.2 or higher
+- Android Studio or VS Code
+- Firebase project with Firestore and Authentication enabled
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+### Installation
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+1. Clone the repository
+2. Install dependencies:
+   ```bash
+   flutter pub get
+   ```
+
+3. Configure Firebase:
+   - Add `google-services.json` to `android/app/`
+   - Add `firebase_options.dart` to `lib/`
+
+4. Run the application:
+   ```bash
+   # For Android
+   flutter run
+
+   # For Web
+   flutter run -d chrome
+   ```
+## Project Structure
+
+```
+lib/
+  components/     # UI widgets
+  database/       # Models, repositories, services
+  pages/          # App screens
+  utils/          # Helpers and constants
+```
