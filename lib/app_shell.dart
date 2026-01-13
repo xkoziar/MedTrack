@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:med_track/database/service/notification_service.dart';
 import 'package:med_track/pages/history_page.dart';
 import 'package:med_track/pages/home_page.dart';
 import 'package:med_track/pages/medication_page.dart';
 import 'package:med_track/pages/profile_page.dart';
+
+final GlobalKey<State<AppShell>> appShellKey = GlobalKey<State<AppShell>>();
 
 class AppShell extends StatefulWidget {
   const AppShell({super.key});
@@ -11,13 +14,45 @@ class AppShell extends StatefulWidget {
   State<AppShell> createState() => _AppShellState();
 }
 
-class _AppShellState extends State<AppShell> {
+class _AppShellState extends State<AppShell> with WidgetsBindingObserver {
   int _index = 3;
+
+  void navigateToHome() {
+    if (mounted) {
+      setState(() => _index = 0);
+    }
+  }
+
+  void navigateToMedications() {
+    if (mounted) {
+      setState(() => _index = 2);
+    }
+  }
 
   @override
   void initState() {
     super.initState();
-    //createMockData(); <--- uprav user id
+    WidgetsBinding.instance.addObserver(this);
+    _checkNotificationWindow();
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+    if (state == AppLifecycleState.resumed) {
+      _checkNotificationWindow();
+    }
+  }
+
+  Future<void> _checkNotificationWindow() async {
+    await Future.delayed(const Duration(milliseconds: 500));
+    NotificationService.checkAndExtendWindow();
   }
 
   @override

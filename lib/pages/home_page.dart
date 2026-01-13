@@ -3,7 +3,7 @@ import 'package:med_track/database/ioc/ioc_container.dart';
 import 'package:med_track/database/service/auth_service.dart';
 import 'package:med_track/database/service/medication_database_service.dart';
 import 'package:med_track/database/service/dose_event/dose_event_database_service.dart';
-import 'package:med_track/database/service/nfc/nfc_background_service.dart';
+import 'package:med_track/database/service/nfc/nfc_service.dart';
 import 'package:med_track/database/model/medication.dart';
 import 'package:med_track/database/model/dose_event.dart';
 import 'package:med_track/utils/constants.dart';
@@ -28,7 +28,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
       get<MedicationDatabaseService>();
   final DoseEventDatabaseService _doseEventService =
       get<DoseEventDatabaseService>();
-  final NfcBackgroundService _nfcBackgroundService = get<NfcBackgroundService>();
+  final NfcService _nfcService = get<NfcService>();
 
   String? _userId;
   bool _isNfcListening = false;
@@ -78,19 +78,19 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
 
     setState(() => _isNfcListening = true);
 
-    await _nfcBackgroundService.startListening(
-      onDoseMarked: (tagName, medicationsMarked) {
+    await _nfcService.startListening(
+      onDoseMarked: (tagName, count) {
         if (mounted) {
           showSnackBar(
             context,
-            '✓ $tagName scanned - Marked $medicationsMarked dose(s)',
+            '✓ $tagName scanned - Marked $count dose(s)',
             backgroundColor: AppColors.success,
           );
           _refreshData();
         }
       },
       onError: (error) {
-        if (mounted && !error.contains('Unknown NFC tag')) {
+        if (mounted && !error.contains('Unknown')) {
           showSnackBar(
             context,
             error,
@@ -104,7 +104,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
   Future<void> _stopNfcListening() async {
     if (!_isNfcListening) return;
 
-    await _nfcBackgroundService.stopListening();
+    await _nfcService.stopListening();
 
     if (mounted) {
       setState(() => _isNfcListening = false);

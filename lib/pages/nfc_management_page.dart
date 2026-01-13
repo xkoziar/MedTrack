@@ -5,7 +5,7 @@ import 'package:med_track/database/model/medication.dart';
 import 'package:med_track/database/model/nfc_tag.dart';
 import 'package:med_track/database/service/auth_service.dart';
 import 'package:med_track/database/service/medication_database_service.dart';
-import 'package:med_track/database/service/nfc/nfc_manager_service.dart';
+import 'package:med_track/database/service/nfc/nfc_service.dart';
 import 'package:med_track/database/service/nfc/nfc_tag_database_service.dart';
 import 'package:med_track/utils/constants.dart';
 import 'package:med_track/utils/snackbar_utils.dart';
@@ -25,7 +25,7 @@ class NfcManagementPage extends StatefulWidget {
 }
 
 class _NfcManagementPageState extends State<NfcManagementPage> {
-  final _nfcManager = get<NfcManagerService>();
+  final _nfcService = get<NfcService>();
   final _nfcTagService = get<NfcTagDatabaseService>();
   final _medicationService = get<MedicationDatabaseService>();
   final _authService = get<AuthService>();
@@ -43,7 +43,7 @@ class _NfcManagementPageState extends State<NfcManagementPage> {
   }
 
   Future<void> _checkNfcAvailability() async {
-    final available = await _nfcManager.isNfcAvailable();
+    final available = await _nfcService.isNfcAvailable();
     if (mounted) {
       setState(() {
         _isNfcAvailable = available;
@@ -82,54 +82,65 @@ class _NfcManagementPageState extends State<NfcManagementPage> {
 
     showSnackBar(context, 'Hold your phone near the NFC tag...');
 
-    await _nfcManager.scanNfcTag(
-      onTagDiscovered: (tagId, nfcTag) async {
-        await _handleTagScanned(tagId, nfcTag);
+    await _nfcService.scanAndWriteTag(
+      onSuccess: (nfcTag, tagId) async {
+        await _handleNewTagScanned(tagId);
       },
-      onError: () {
+      onError: (error) {
         if (mounted) {
           showSnackBar(
             context,
-            'Error scanning NFC tag',
+            error,
             backgroundColor: AppColors.danger,
           );
+          setState(() => _isScanning = false);
         }
       },
     );
-
-    if (mounted) {
-      setState(() {
-        _isScanning = false;
-      });
-    }
   }
 
-  Future<void> _handleTagScanned(String tagId, dynamic nfcTag) async {
+  Future<void> _handleNewTagScanned(String tagId) async {
+    if (mounted) {
+      setState(() => _isScanning = false);
+    }
+
     final userId = _authService.user?.uid;
-    if (userId == null) return;
+    if (userId == null) {
+      await _nfcService.stopListening();
+      return;
+    }
 
-    final existingTag = await _nfcTagService.findByTagId(userId, tagId);
+    final existingTag = await _nfcTagService.findTagWithFallback(userId, tagId);
 
-    if (!mounted) return;
+    if (!mounted) {
+      await _nfcService.stopListening();
+      return;
+    }
 
     if (existingTag != null) {
-      NfcTagDialogs.showTagOptionsDialog(
+      // Tag already registered
+      showSnackBar(context, 'This tag is already registered as "${existingTag.name}"');
+      await NfcTagDialogs.showTagOptionsDialog(
         context,
         existingTag,
         onUpdated: _loadUserData,
       );
     } else {
+      // New tag
       final newTag = await NfcTagDialogs.showNameNewTagDialog(
         context,
         tagId,
-        nfcTag: nfcTag,
         initialMedicationIds: widget.medication != null ? [widget.medication!.id] : [],
       );
 
       if (newTag != null && mounted) {
+        showSnackBar(context, 'Tag registered successfully!', backgroundColor: AppColors.success);
         _loadUserData();
       }
     }
+    
+    // Stop NFC session after dialog closes to prevent Android from reading AAR
+    await _nfcService.stopListening();
   }
 
 
@@ -201,7 +212,7 @@ class _NfcManagementPageState extends State<NfcManagementPage> {
                     else
                       ..._userTags.map((tag) {
                         final medications = _userMedications
-                            .where((m) => tag.medicationIds.contains(m.id))
+                            .where((m) => m.nfcTagIds.contains(tag.id))
                             .toList();
                         return Padding(
                           padding: const EdgeInsets.only(
@@ -265,20 +276,23 @@ class _ManageNfcTagPageState extends State<ManageNfcTagPage> {
   }
 
   Future<void> _toggleMedication(String medicationId) async {
-    final isAssigned = _tag.medicationIds.contains(medicationId);
+    final medication = _allMedications.firstWhere((m) => m.id == medicationId);
+    final isAssigned = medication.nfcTagIds.contains(_tag.id);
 
     if (isAssigned) {
-      await _nfcTagService.removeMedicationFromTag(_tag.id, medicationId);
+      // Remove tag from medication
+      final updatedTagIds = List<String>.from(medication.nfcTagIds)..remove(_tag.id);
+      final updatedMed = medication.copyWith(nfcTagIds: updatedTagIds);
+      await _medicationService.update(medicationId, updatedMed);
     } else {
-      await _nfcTagService.addMedicationToTag(_tag.id, medicationId);
+      // Add tag to medication
+      final updatedTagIds = List<String>.from(medication.nfcTagIds)..add(_tag.id);
+      final updatedMed = medication.copyWith(nfcTagIds: updatedTagIds);
+      await _medicationService.update(medicationId, updatedMed);
     }
 
-    final updatedTag = await _nfcTagService.get(_tag.id);
-    if (updatedTag != null && mounted) {
-      setState(() {
-        _tag = updatedTag;
-      });
-    }
+    // Reload medications to refresh UI
+    await _loadMedications();
   }
 
   Future<void> _renameTag() async {
@@ -353,8 +367,7 @@ class _ManageNfcTagPageState extends State<ManageNfcTagPage> {
                     )
                   else
                     ..._allMedications.map((medication) {
-                      final isAssigned =
-                          _tag.medicationIds.contains(medication.id);
+                      final isAssigned = medication.nfcTagIds.contains(_tag.id);
                       return Padding(
                         padding: const EdgeInsets.only(bottom: AppSpacing.sm),
                         child: AppCard(

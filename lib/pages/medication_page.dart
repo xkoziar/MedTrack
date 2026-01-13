@@ -9,8 +9,8 @@ import 'package:med_track/pages/add_medication_page.dart';
 import 'package:med_track/utils/constants.dart';
 import 'package:med_track/utils/handling_stream_builder.dart';
 
-import '../database/model/medication.dart';
-import '../database/service/auth_service.dart';
+import 'package:med_track/database/model/medication.dart';
+import 'package:med_track/database/service/auth_service.dart';
 import 'medication_details_page.dart';
 
 class MedicationPage extends StatelessWidget {

@@ -5,7 +5,7 @@ import 'package:med_track/database/model/nfc_tag.dart';
 import 'package:med_track/utils/constants.dart';
 
 class NfcTagSelector extends StatelessWidget {
-  final String? selectedNfcTagId;
+  final Set<String> selectedNfcTagIds;
   final List<NfcTag> availableTags;
   final bool isScanning;
   final bool isLoadingTags;
@@ -13,7 +13,7 @@ class NfcTagSelector extends StatelessWidget {
 
   const NfcTagSelector({
     super.key,
-    required this.selectedNfcTagId,
+    required this.selectedNfcTagIds,
     required this.availableTags,
     required this.isScanning,
     required this.isLoadingTags,
@@ -26,47 +26,51 @@ class NfcTagSelector extends StatelessWidget {
       return const Center(child: CircularProgressIndicator());
     }
 
-    final selectedTag = availableTags.firstWhere(
-      (tag) => tag.id == selectedNfcTagId,
-      orElse: () => NfcTag(
-        userId: '',
-        tagId: '',
-        name: '',
-        medicationIds: [],
-      ),
-    );
+    final selectedTags = availableTags
+        .where((tag) => selectedNfcTagIds.contains(tag.id))
+        .toList();
 
-    if (selectedNfcTagId != null && selectedTag.name.isNotEmpty) {
-      return AppCard(
-        child: Row(
-          children: [
-            const NfcIconContainer(),
-            const SizedBox(width: AppSpacing.md),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+    if (selectedTags.isNotEmpty) {
+      return Column(
+        children: [
+          ...selectedTags.map((tag) => Padding(
+            padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+            child: AppCard(
+              child: Row(
                 children: [
-                  Text(
-                    selectedTag.name,
-                    style: AppTextStyles.bodyMediumSemiBold,
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    'NFC Tag Selected',
-                    style: AppTextStyles.bodySmall.copyWith(
-                      color: AppColors.success,
+                  const NfcIconContainer(),
+                  const SizedBox(width: AppSpacing.md),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          tag.name,
+                          style: AppTextStyles.bodyMediumSemiBold,
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          'NFC Tag',
+                          style: AppTextStyles.bodySmall.copyWith(
+                            color: AppColors.success,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ],
               ),
             ),
-            IconButton(
-              icon: const Icon(Icons.edit),
-              onPressed: onShowPicker,
-              tooltip: 'Change NFC tag',
+          )),
+          OutlinedButton.icon(
+            onPressed: isScanning ? null : onShowPicker,
+            icon: const Icon(Icons.edit),
+            label: Text('Manage NFC Tags (${selectedTags.length})'),
+            style: OutlinedButton.styleFrom(
+              padding: const EdgeInsets.all(AppSpacing.md),
             ),
-          ],
-        ),
+          ),
+        ],
       );
     }
 

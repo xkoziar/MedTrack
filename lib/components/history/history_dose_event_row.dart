@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:med_track/database/model/medication.dart';
 import 'package:med_track/utils/helpers/medication_scheduling.dart';
-import '../common/dose_status_chip.dart';
-import '../../database/model/dose_event.dart';
-import '../../utils/constants.dart';
+import 'package:med_track/components/common/dose_status_chip.dart';
+import 'package:med_track/database/model/dose_event.dart';
+import 'package:med_track/utils/constants.dart';
 
 class HistoryDoseEventRow extends StatelessWidget {
   final DoseEvent event;
@@ -48,7 +48,7 @@ class HistoryDoseEventRow extends StatelessWidget {
               ],
             ),
           ),
-          DoseStatusChip(status: event.status, takenAt: event.takenAt),
+          DoseStatusChip(event: event),
         ],
       ),
     );

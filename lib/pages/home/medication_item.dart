@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import '../../utils/constants.dart';
-import '../../components/common/app_card.dart';
+import 'package:med_track/utils/constants.dart';
+import 'package:med_track/components/common/app_card.dart';
 
 class MedicationItem extends StatelessWidget {
   final String name;

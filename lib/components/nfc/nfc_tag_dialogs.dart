@@ -2,46 +2,25 @@ import 'package:flutter/material.dart';
 import 'package:med_track/database/ioc/ioc_container.dart';
 import 'package:med_track/database/model/nfc_tag.dart';
 import 'package:med_track/database/service/auth_service.dart';
-import 'package:med_track/database/service/nfc/nfc_background_service.dart';
+import 'package:med_track/database/service/medication_database_service.dart';
 import 'package:med_track/database/service/nfc/nfc_tag_database_service.dart';
-import 'package:med_track/database/service/nfc/nfc_writer_service.dart';
 import 'package:med_track/utils/constants.dart';
 import 'package:med_track/utils/snackbar_utils.dart';
-import 'package:nfc_manager/nfc_manager.dart' as nfc_manager;
 
-/// Reusable NFC tag dialogs
 class NfcTagDialogs {
-  /// Show dialog to name and create new NFC tag
   static Future<NfcTag?> showNameNewTagDialog(
     BuildContext context,
     String tagId, {
-    nfc_manager.NfcTag? nfcTag,
     List<String>? initialMedicationIds,
-    bool pauseScanning = false,
   }) async {
     final nameController = TextEditingController();
     final authService = get<AuthService>();
     final nfcTagService = get<NfcTagDatabaseService>();
-    final nfcWriter = get<NfcWriterService>();
-    final nfcService = get<NfcBackgroundService>();
-
-    if (nfcTag != null) {
-      try {
-        await nfcWriter.writeAppLaunchRecordToTag(nfcTag, tagId);
-      } catch (e) {
-        // Ignore write errors
-      }
-    }
-
-    if (pauseScanning) {
-      await nfcService.startIgnoringScans();
-    }
 
     if (!context.mounted) return null;
 
     final result = await showDialog<NfcTag>(
       context: context,
-      barrierDismissible: !pauseScanning,
       builder: (ctx) => AlertDialog(
         title: const Text('Name Your NFC Tag'),
         content: SingleChildScrollView(
@@ -122,14 +101,9 @@ class NfcTagDialogs {
       ),
     );
 
-    if (pauseScanning) {
-      nfcService.stopIgnoringScans();
-    }
-
     return result;
   }
 
-  /// Show a dialog to rename an existing NFC tag
   static Future<String?> showRenameTagDialog(
     BuildContext context,
     String currentName,
@@ -171,7 +145,6 @@ class NfcTagDialogs {
     );
   }
 
-  /// Show confirmation dialog before deleting NFC tag
   static Future<bool> showDeleteTagDialog(
     BuildContext context,
     String tagName,
@@ -205,7 +178,96 @@ class NfcTagDialogs {
     return confirmed ?? false;
   }
 
-  /// Show dialog with tag options (rename/delete)
+  static Future<void> showManageMedicationsDialog(
+    BuildContext context,
+    NfcTag tag,
+  ) async {
+    final authService = get<AuthService>();
+    final medicationService = get<MedicationDatabaseService>();
+
+    final userId = authService.user?.uid;
+    if (userId == null) return;
+
+    var medications = await medicationService.getUserMedications(userId);
+    final selectedMedicationIds = Set<String>.from(
+      medications.where((med) => med.nfcTagIds.contains(tag.id)).map((med) => med.id),
+    );
+
+    if (!context.mounted) return;
+
+    await showDialog(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          title: Text('Manage Medications for ${tag.name}'),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Select medications to assign to this tag:',
+                  style: AppTextStyles.bodySmall.copyWith(
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.md),
+                if (medications.isEmpty)
+                  const Padding(
+                    padding: EdgeInsets.all(AppSpacing.lg),
+                    child: Text(
+                      'No medications available.\nCreate medications first.',
+                      textAlign: TextAlign.center,
+                    ),
+                  )
+                else
+                  ...medications.map((med) {
+                    final isSelected = selectedMedicationIds.contains(med.id);
+
+                    return CheckboxListTile(
+                      title: Text(med.name),
+                      subtitle: Text(med.dosage),
+                      value: isSelected,
+                      onChanged: (checked) async {
+                        if (checked == true) {
+                          selectedMedicationIds.add(med.id);
+                          final updatedTagIds = List<String>.from(med.nfcTagIds)..add(tag.id);
+                          final updatedMed = med.copyWith(nfcTagIds: updatedTagIds);
+                          await medicationService.update(med.id, updatedMed);
+
+                          final medIndex = medications.indexWhere((m) => m.id == med.id);
+                          if (medIndex != -1) {
+                            medications[medIndex] = updatedMed;
+                          }
+                        } else {
+                          selectedMedicationIds.remove(med.id);
+                          final updatedTagIds = List<String>.from(med.nfcTagIds)..remove(tag.id);
+                          final updatedMed = med.copyWith(nfcTagIds: updatedTagIds);
+                          await medicationService.update(med.id, updatedMed);
+
+                          final medIndex = medications.indexWhere((m) => m.id == med.id);
+                          if (medIndex != -1) {
+                            medications[medIndex] = updatedMed;
+                          }
+                        }
+                        setDialogState(() {});
+                      },
+                    );
+                  }),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(),
+              child: const Text('Done'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   static Future<void> showTagOptionsDialog(
     BuildContext context,
     NfcTag tag, {

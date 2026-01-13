@@ -13,7 +13,7 @@ class ScheduleSection extends StatelessWidget {
   final List<Medication> medications;
   final int takenCount;
   final int totalToday;
-  final Function(String, DateTime, bool) onToggleMedication;
+  final void Function(String, DateTime, bool) onToggleMedication;
   final VoidCallback onAddMedication;
 
   const ScheduleSection({

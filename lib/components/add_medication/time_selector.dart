@@ -3,9 +3,9 @@ import 'package:med_track/utils/constants.dart';
 
 class TimeSelector extends StatelessWidget {
   final List<TimeOfDay> selectedTimes;
-  final Function(int) onTimeSelected;
+  final void Function(int) onTimeSelected;
   final VoidCallback onAddTime;
-  final Function(int) onRemoveTime;
+  final void Function(int) onRemoveTime;
 
   const TimeSelector({
     super.key,

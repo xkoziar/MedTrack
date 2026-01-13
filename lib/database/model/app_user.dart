@@ -10,12 +10,14 @@ class AppUser implements IEntity {
   final String email;
   final String name;
   final bool notificationsEnabled;
+  final int reminderMinutes;
 
   const AppUser({
     required this.id,
     required this.email,
     required this.name,
-    this.notificationsEnabled = true,
+    this.notificationsEnabled = false,
+    this.reminderMinutes = 15,
   });
 
   factory AppUser.fromJson(Map<String, dynamic> json) =>
@@ -28,12 +30,14 @@ class AppUser implements IEntity {
     String? email,
     String? name,
     bool? notificationsEnabled,
+    int? reminderMinutes,
   }) {
     return AppUser(
       id: id ?? this.id,
       email: email ?? this.email,
       name: name ?? this.name,
       notificationsEnabled: notificationsEnabled ?? this.notificationsEnabled,
+      reminderMinutes: reminderMinutes ?? this.reminderMinutes,
     );
   }
 }

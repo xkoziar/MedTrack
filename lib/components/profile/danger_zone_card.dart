@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:med_track/components/common/buttons/secondary_button.dart';
-import '../../utils/constants.dart';
+import 'package:med_track/utils/constants.dart';
 
 class DangerZoneCard extends StatelessWidget {
   final VoidCallback onDelete;

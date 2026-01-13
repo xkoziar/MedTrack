@@ -5,12 +5,6 @@ import 'package:med_track/database/model/medication.dart';
 class DoseEventCreationService {
   final _db = FirebaseFirestore.instance;
 
-  /// Generates and saves [DoseEvent]s for a given [medication]
-  /// for a specified number of days into the future.
-  ///
-  /// An optional [startDate] can be provided to specify the time from which
-  /// to start creating events. If not provided, it defaults to `DateTime.now()`.
-  /// It checks for existing events to prevent duplicates.
   Future<void> createDoseEventsForMedication(
     Medication medication, {
     int lookAheadDays = 7,
@@ -61,7 +55,6 @@ class DoseEventCreationService {
               userId: medication.userId,
               medicationId: medication.id,
               scheduledAt: scheduledAt,
-              status: DoseStatus.pending,
             );
             final newDocRef = doseEventsRef.doc(newEvent.id);
             batch.set(

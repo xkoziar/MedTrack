@@ -2,16 +2,20 @@ import 'package:flutter/material.dart';
 import 'package:med_track/components/profile/profile_content.dart';
 import 'package:med_track/database/ioc/ioc_container.dart';
 import 'package:med_track/database/model/dose_event.dart';
+import 'package:med_track/database/model/medication.dart';
 import 'package:med_track/database/service/auth_service.dart';
 import 'package:med_track/database/service/dose_event/dose_event_database_service.dart';
+import 'package:med_track/database/service/medication_database_service.dart';
+import 'package:med_track/database/service/notification_service.dart';
 import 'package:med_track/database/service/user_database_service.dart';
 import 'package:med_track/database/model/app_user.dart';
+import 'package:med_track/pages/nfc_management_page.dart';
 
-import '../components/profile/dialogs/change_password_dialog.dart';
-import '../components/profile/dialogs/delete_account_dialog.dart';
-import '../utils/constants.dart';
-import '../utils/handling_stream_builder.dart';
-import '../utils/snackbar_utils.dart';
+import 'package:med_track/components/profile/dialogs/change_password_dialog.dart';
+import 'package:med_track/components/profile/dialogs/delete_account_dialog.dart';
+import 'package:med_track/utils/constants.dart';
+import 'package:med_track/utils/handling_stream_builder.dart';
+import 'package:med_track/utils/snackbar_utils.dart';
 
 class ProfilePage extends StatelessWidget {
   ProfilePage({super.key});
@@ -19,6 +23,7 @@ class ProfilePage extends StatelessWidget {
   final _authService = get<AuthService>();
   final _userDbService = get<UserDatabaseService>();
   final _doseEventDbService = get<DoseEventDatabaseService>();
+  final _medicationDbService = get<MedicationDatabaseService>();
   late final _userId = _authService.user?.uid;
 
   @override
@@ -47,18 +52,27 @@ class ProfilePage extends StatelessWidget {
             );
           }
 
-          return HandlingStreamBuilder<List<DoseEvent>>(
-            stream: _doseEventDbService.observeUserDoseEvents(user.id!),
-            builder: (events) {
-              return ProfileContent(
-                user: user,
-                events: events,
-                onLogout: _authService.signOut,
-                onChangePassword: () =>
-                    _showChangePasswordDialog(context, user),
-                onDeleteAccount: () => _showDeleteAccountDialog(context, user),
-                onToggleNotifications: (value) =>
-                    _onToggleNotifications(context, user, value),
+          return HandlingStreamBuilder<List<Medication>>(
+            stream: _medicationDbService.observeUserMedications(user.id!),
+            builder: (medications) {
+              return HandlingStreamBuilder<List<DoseEvent>>(
+                stream: _doseEventDbService.observeUserDoseEvents(user.id!),
+                builder: (events) {
+                  return ProfileContent(
+                    user: user,
+                    events: events,
+                    medications: medications,
+                    onLogout: _authService.signOut,
+                    onChangePassword: () =>
+                        _showChangePasswordDialog(context, user),
+                    onManageNfcTags: () => _navigateToNfcManagement(context),
+                    onDeleteAccount: () => _showDeleteAccountDialog(context, user),
+                    onToggleNotifications: (value) =>
+                        _onToggleNotifications(context, user, value),
+                    onReminderChanged: (minutes) =>
+                        _onReminderChanged(context, user, minutes),
+                  );
+                },
               );
             },
           );
@@ -75,12 +89,44 @@ class ProfilePage extends StatelessWidget {
     try {
       final updatedUser = user.copyWith(notificationsEnabled: value);
       await _userDbService.update(updatedUser.id!, updatedUser);
+
+      if (value) {
+        await NotificationService.requestPermission();
+        await NotificationService.scheduleForUser(user.id!, user.reminderMinutes);
+      } else {
+        await NotificationService.cancelAll();
+      }
+
       if (context.mounted) {
-        showSnackBar(context, 'Notification settings updated');
+        showSnackBar(context, value ? 'Notifications enabled' : 'Notifications disabled');
       }
     } catch (e) {
       if (context.mounted) {
         showSnackBar(context, 'Failed to update settings: $e');
+      }
+    }
+  }
+
+  Future<void> _onReminderChanged(
+    BuildContext context,
+    AppUser user,
+    int minutes,
+  ) async {
+    try {
+      final updatedUser = user.copyWith(reminderMinutes: minutes);
+      await _userDbService.update(updatedUser.id!, updatedUser);
+
+      if (user.notificationsEnabled) {
+        await NotificationService.scheduleForUser(user.id!, minutes);
+      }
+
+      if (context.mounted) {
+        final msg = minutes == 0 ? 'Reminder set to dose time' : 'Reminder set to $minutes min before';
+        showSnackBar(context, msg);
+      }
+    } catch (e) {
+      if (context.mounted) {
+        showSnackBar(context, 'Failed to update reminder: $e');
       }
     }
   }
@@ -144,5 +190,12 @@ class ProfilePage extends StatelessWidget {
         showSnackBar(context, 'Failed to delete account: $e');
       }
     }
+  }
+
+  void _navigateToNfcManagement(BuildContext context) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const NfcManagementPage()),
+    );
   }
 }

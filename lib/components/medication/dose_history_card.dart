@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import '../common/app_card.dart';
-import '../../database/model/dose_event.dart';
-import '../../utils/constants.dart';
+import 'package:med_track/components/common/app_card.dart';
+import 'package:med_track/database/model/dose_event.dart';
+import 'package:med_track/utils/constants.dart';
 import 'dose_history_row.dart';
 
 class DoseHistoryCard extends StatelessWidget {

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../../utils/constants.dart';
+import 'package:med_track/utils/constants.dart';
 
 class SecondaryOutlineButton extends StatelessWidget {
   final String label;

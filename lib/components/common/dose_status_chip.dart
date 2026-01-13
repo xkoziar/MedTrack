@@ -1,20 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:med_track/utils/helpers/medication_scheduling.dart';
-import '../../database/model/dose_event.dart';
+import 'package:med_track/database/model/dose_event.dart';
 
 class DoseStatusChip extends StatelessWidget {
-  final DoseStatus status;
-  final DateTime? takenAt;
+  final DoseEvent event;
 
-  const DoseStatusChip({
-    super.key,
-    required this.status,
-    this.takenAt,
-  });
+  const DoseStatusChip({super.key, required this.event});
 
   @override
   Widget build(BuildContext context) {
-    final config = DoseStatusChipConfig.fromStatus(status, takenAt);
+    final config = DoseStatusChipConfig.fromEvent(event);
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
@@ -45,30 +40,25 @@ class DoseStatusChipConfig {
     required this.foregroundColor,
   });
 
-  factory DoseStatusChipConfig.fromStatus(
-    DoseStatus status,
-    DateTime? takenAt,
-  ) {
-    switch (status) {
-      case DoseStatus.taken:
-        return DoseStatusChipConfig(
-          label:
-              takenAt == null ? 'Taken' : '✓ Taken ${formatTimeHm(takenAt)}',
-          backgroundColor: Color(0xFFD4EDDA),
-          foregroundColor: Color(0xFF155724),
-        );
-      case DoseStatus.missed:
-        return const DoseStatusChipConfig(
-          label: '✗ Missed',
-          backgroundColor: Color(0xFFF8D7DA),
-          foregroundColor: Color(0xFF721C24),
-        );
-      case DoseStatus.pending:
-        return const DoseStatusChipConfig(
-          label: '⏳ Pending',
-          backgroundColor: Color(0xFFFFF3CD),
-          foregroundColor: Color(0xFF856404),
-        );
+  factory DoseStatusChipConfig.fromEvent(DoseEvent event) {
+    if (isTaken(event)) {
+      return DoseStatusChipConfig(
+        label: '✓ Taken ${formatTimeHm(event.takenAt!)}',
+        backgroundColor: const Color(0xFFD4EDDA),
+        foregroundColor: const Color(0xFF155724),
+      );
+    } else if (isMissed(event)) {
+      return const DoseStatusChipConfig(
+        label: '✗ Missed',
+        backgroundColor: Color(0xFFF8D7DA),
+        foregroundColor: Color(0xFF721C24),
+      );
+    } else {
+      return const DoseStatusChipConfig(
+        label: '⏳ Pending',
+        backgroundColor: Color(0xFFFFF3CD),
+        foregroundColor: Color(0xFF856404),
+      );
     }
   }
 }

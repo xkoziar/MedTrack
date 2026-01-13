@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-import '../../utils/constants.dart';
-import '../common/app_card.dart';
+import 'package:med_track/utils/constants.dart';
+import 'package:med_track/components/common/app_card.dart';
 
 class UserInfoCard extends StatelessWidget {
   final String name;

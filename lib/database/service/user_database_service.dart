@@ -1,7 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-import '../model/app_user.dart';
-import '../repository/firestore_repository.dart';
+import 'package:med_track/database/model/app_user.dart';
+import 'package:med_track/database/repository/firestore_repository.dart';
 
 class UserDatabaseService extends FirestoreRepository<AppUser> {
   UserDatabaseService()
@@ -10,10 +10,6 @@ class UserDatabaseService extends FirestoreRepository<AppUser> {
     fromJson: (json, id) => AppUser.fromJson(json),
     toJson: (user) => user.toJson(),
   );
-
-  // -----------------------------------------
-  // CUSTOM METHODS → specific to User entity
-  // -----------------------------------------
 
   Future<AppUser?> findByEmail(String email) async {
     final query = await FirebaseFirestore.instance

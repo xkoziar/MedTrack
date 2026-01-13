@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:med_track/components/common/app_card.dart';
 import 'package:med_track/utils/helpers/medication_scheduling.dart';
 
-import '../../database/model/medication.dart';
-import '../../utils/constants.dart';
+import 'package:med_track/database/model/medication.dart';
+import 'package:med_track/utils/constants.dart';
 
 class MedicationShortInfoCard extends StatelessWidget {
   final Medication medication;

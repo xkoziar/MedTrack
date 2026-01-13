@@ -27,7 +27,7 @@ class AppWrapper extends StatelessWidget {
           }
 
           if (snapshot.hasData) {
-            return AppShell(key: ValueKey(snapshot.data?.id));
+            return AppShell(key: appShellKey);
           }
 
           return const AuthPage();

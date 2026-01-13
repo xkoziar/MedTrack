@@ -133,3 +133,17 @@ class MedAdherence {
   static const days7 = 7;
   static const days30 = 30;
 }
+
+class MedicationConstants {
+
+  static const doseReminderAdvanceMinutes = 15;
+  static const doseLateThresholdMinutes = 15;
+  static const maxDosesPerDay = 24;
+
+  static const scheduleLookAheadDays = 7;
+
+  static const historyDefaultDays = 30;
+  static const streakCalculationDays = 365;
+
+  static const nfcPackageName = 'pv292.fi.muni.cz.med_track';
+}

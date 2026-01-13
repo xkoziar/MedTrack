@@ -22,7 +22,9 @@ Medication _$MedicationFromJson(Map<String, dynamic> json) => Medication(
   scheduleTimes: (json['scheduleTimes'] as List<dynamic>)
       .map((e) => e as String)
       .toList(),
-  nfcTagId: json['nfcTagId'] as String?,
+  nfcTagIds: (json['nfcTagIds'] as List<dynamic>?)
+      ?.map((e) => e as String)
+      .toList(),
   createdAt: json['createdAt'] == null
       ? null
       : DateTime.parse(json['createdAt'] as String),
@@ -42,7 +44,7 @@ Map<String, dynamic> _$MedicationToJson(Medication instance) =>
       'isActive': instance.isActive,
       'scheduleDays': instance.scheduleDays,
       'scheduleTimes': instance.scheduleTimes,
-      'nfcTagId': instance.nfcTagId,
+      'nfcTagIds': instance.nfcTagIds,
       'createdAt': instance.createdAt.toIso8601String(),
       'updatedAt': instance.updatedAt.toIso8601String(),
     };

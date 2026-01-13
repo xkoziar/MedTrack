@@ -84,7 +84,9 @@ class _HistoryPageState extends State<HistoryPage> {
           return HandlingStreamBuilder<List<DoseEvent>>(
             stream: _doseEventDbService.observeUserDoseEvents(_userId),
             builder: (events) {
-              final groupedEvents = _groupEventsByDay(events);
+              // Generate virtual missed doses for display
+              final allEvents = _addVirtualMissedDoses(events, medications);
+              final groupedEvents = _groupEventsByDay(allEvents);
               final sortedDates = groupedEvents.keys.sorted(
                 (a, b) => b.compareTo(a),
               );
@@ -101,7 +103,7 @@ class _HistoryPageState extends State<HistoryPage> {
                       child: AdherenceRateProviderCard(userId: _userId),
                     ),
                   ),
-                  if (events.isEmpty)
+                  if (allEvents.isEmpty)
                     const SliverFillRemaining(
                       child: Center(child: Text('No history yet.')),
                     )
@@ -152,8 +154,69 @@ class _HistoryPageState extends State<HistoryPage> {
     );
   }
 
+  List<DoseEvent> _addVirtualMissedDoses(
+    List<DoseEvent> existingEvents,
+    List<Medication> medications,
+  ) {
+    final now = DateTime.now();
+    final endOfToday = DateTime(now.year, now.month, now.day, 23, 59, 59);
+
+    final existingScheduledTimes = <String>{};
+    for (final event in existingEvents) {
+      existingScheduledTimes.add(_timeKey(event.scheduledAt));
+    }
+
+    final virtualEvents = <DoseEvent>[];
+
+    for (final med in medications.where((m) => m.isActive)) {
+      final medStart = DateTime(med.startDate.year, med.startDate.month, med.startDate.day);
+      final today = DateTime(now.year, now.month, now.day);
+      final startDate = medStart.isAfter(today.subtract(const Duration(days: MedicationConstants.historyDefaultDays)))
+          ? medStart
+          : today.subtract(const Duration(days: MedicationConstants.historyDefaultDays));
+
+      for (var date = startDate; date.isBefore(endOfToday); date = date.add(const Duration(days: 1))) {
+        if (!med.scheduleDays.contains(date.weekday)) continue;
+
+        if (med.endDate != null) {
+          final medEnd = DateTime(med.endDate!.year, med.endDate!.month, med.endDate!.day);
+          if (date.isAfter(medEnd)) break;
+        }
+
+        for (final timeStr in med.scheduleTimes) {
+          final parts = timeStr.split(':');
+          final hour = int.parse(parts[0]);
+          final minute = int.parse(parts[1]);
+          final scheduledTime = DateTime(date.year, date.month, date.day, hour, minute);
+
+          if (scheduledTime.isAfter(now.subtract(const Duration(minutes: MedicationConstants.doseLateThresholdMinutes)))) continue;
+
+          if (!existingScheduledTimes.contains(_timeKey(scheduledTime))) {
+            virtualEvents.add(DoseEvent(
+              userId: med.userId,
+              medicationId: med.id,
+              scheduledAt: scheduledTime,
+              takenAt: null,
+            ));
+          }
+        }
+      }
+    }
+
+    return [...existingEvents, ...virtualEvents];
+  }
+
+  String _timeKey(DateTime dt) => '${dt.year}-${dt.month}-${dt.day}-${dt.hour}-${dt.minute}';
+
   Map<DateTime, List<DoseEvent>> _groupEventsByDay(List<DoseEvent> events) {
-    return groupBy(events, (DoseEvent event) {
+    final now = DateTime.now();
+    final endOfToday = DateTime(now.year, now.month, now.day, 23, 59, 59);
+
+    final pastEvents = events.where((e) =>
+      e.scheduledAt.isBefore(endOfToday) || e.scheduledAt.isAtSameMomentAs(endOfToday)
+    ).toList();
+
+    return groupBy(pastEvents, (DoseEvent event) {
       final date = event.scheduledAt;
       return DateTime(date.year, date.month, date.day);
     });

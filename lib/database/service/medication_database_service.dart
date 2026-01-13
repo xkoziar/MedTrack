@@ -1,8 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:med_track/database/service/dose_event/dose_event_update_service.dart';
-import '../model/medication.dart';
-import '../repository/firestore_repository.dart';
-import 'dose_event/dose_event_creating_service.dart';
+import 'package:med_track/database/service/notification_service.dart';
+import 'package:med_track/database/model/medication.dart';
+import 'package:med_track/database/repository/firestore_repository.dart';
 
 class MedicationDatabaseService extends FirestoreRepository<Medication> {
   MedicationDatabaseService()
@@ -11,10 +10,6 @@ class MedicationDatabaseService extends FirestoreRepository<Medication> {
         fromJson: (json, id) => Medication.fromJson(json, id: id),
         toJson: (medication) => medication.toJson(),
       );
-
-  // ----------------------------------------------
-  // CUSTOM METHODS → specific to Medication entity
-  // ----------------------------------------------
 
   Future<List<Medication>> getUserMedications(String userId) async {
     final query = await FirebaseFirestore.instance
@@ -42,17 +37,13 @@ class MedicationDatabaseService extends FirestoreRepository<Medication> {
   @override
   Future<void> create(Medication entity) async {
     await super.create(entity);
-
-    final doseEventCreationService = DoseEventCreationService();
-    await doseEventCreationService.createDoseEventsForMedication(entity);
+    NotificationService.reschedule();
   }
 
   @override
   Future<void> update(String id, Medication entity) async {
     await super.update(id, entity);
-
-    final doseEventUpdateService = DoseEventUpdateService();
-    await doseEventUpdateService.updateDoseEventsForMedication(entity);
+    NotificationService.reschedule();
   }
 
   @override
@@ -73,5 +64,7 @@ class MedicationDatabaseService extends FirestoreRepository<Medication> {
     batch.delete(medicationDocRef);
 
     await batch.commit();
+
+    NotificationService.reschedule();
   }
 }

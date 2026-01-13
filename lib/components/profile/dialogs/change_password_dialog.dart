@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:med_track/utils/constants.dart';
-import '../../../components/common/custom_text_field.dart';
-import '../../../utils/validators.dart';
+import 'package:med_track/components/common/custom_text_field.dart';
+import 'package:med_track/utils/validators.dart';
 
 class ChangePasswordDialog extends StatefulWidget {
   final Future<void> Function(String currentPassword, String newPassword)

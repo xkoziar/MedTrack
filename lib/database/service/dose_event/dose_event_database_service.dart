@@ -1,6 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import '../../model/dose_event.dart';
-import '../../repository/firestore_repository.dart';
+import 'package:med_track/database/model/dose_event.dart';
+import 'package:med_track/database/repository/firestore_repository.dart';
 
 class DoseEventDatabaseService extends FirestoreRepository<DoseEvent> {
   DoseEventDatabaseService()
@@ -9,10 +9,6 @@ class DoseEventDatabaseService extends FirestoreRepository<DoseEvent> {
         fromJson: (json, id) => DoseEvent.fromJson(json, id: id),
         toJson: (doseEvent) => doseEvent.toJson(),
       );
-
-  // ----------------------------------------------
-  // CUSTOM METHODS → specific to DoseEvent entity
-  // ----------------------------------------------
 
   Stream<List<DoseEvent>> observeMedicationEventsTodayAndEarlier(
     String medicationId, {
@@ -127,31 +123,6 @@ class DoseEventDatabaseService extends FirestoreRepository<DoseEvent> {
     await batch.commit();
   }
 
-  Future<void> updateDoseEventsStatusToMissed(String userId) async {
-    final now = DateTime.now();
-    final db = FirebaseFirestore.instance;
-
-    final query = db
-        .collection('dose_events')
-        .where('userId', isEqualTo: userId)
-        .where('status', isEqualTo: DoseStatus.pending.name);
-
-    final snapshot = await query.get();
-    if (snapshot.docs.isEmpty) {
-      return;
-    }
-
-    final batch = db.batch();
-    for (final doc in snapshot.docs) {
-      final event = DoseEvent.fromJson(doc.data(), id: doc.id);
-      if (event.scheduledAt.isBefore(now)) {
-        batch.update(doc.reference, {'status': DoseStatus.missed.name});
-      }
-    }
-
-    await batch.commit();
-  }
-
   Future<List<DoseEvent>> getMedicationEvents(String medicationId) async {
     final query = await FirebaseFirestore.instance
         .collection('dose_events')
@@ -164,7 +135,6 @@ class DoseEventDatabaseService extends FirestoreRepository<DoseEvent> {
         .toList();
   }
 
-  // Create or update a dose event
   Future<void> recordDose({
     required String userId,
     required String medicationId,
@@ -178,40 +148,39 @@ class DoseEventDatabaseService extends FirestoreRepository<DoseEvent> {
     );
 
     if (existingEvent != null) {
-      // Update existing event
       if (taken) {
         await update(
           existingEvent.id,
           existingEvent.copyWith(
             takenAt: DateTime.now(),
-            status: DoseStatus.taken,
             updatedAt: DateTime.now(),
           ),
         );
       } else {
         await update(
           existingEvent.id,
-          existingEvent.copyWith(
+          DoseEvent(
+            id: existingEvent.id,
+            userId: existingEvent.userId,
+            medicationId: existingEvent.medicationId,
+            scheduledAt: existingEvent.scheduledAt,
             takenAt: null,
-            status: DoseStatus.pending,
+            createdAt: existingEvent.createdAt,
             updatedAt: DateTime.now(),
           ),
         );
       }
     } else if (taken) {
-      // Create new event
       final event = DoseEvent(
         userId: userId,
         medicationId: medicationId,
         scheduledAt: scheduledAt,
         takenAt: DateTime.now(),
-        status: DoseStatus.taken,
       );
       await create(event);
     }
   }
 
-  // Check if a dose event exists for a specific schedule
   Future<DoseEvent?> findEventBySchedule({
     required String userId,
     required String medicationId,
@@ -287,5 +256,36 @@ class DoseEventDatabaseService extends FirestoreRepository<DoseEvent> {
               ),
         )
         .toList();
+  }
+
+  Future<List<DoseEvent>> getForMedicationInRange(
+    String medicationId,
+    DateTime startDate,
+    DateTime endDate,
+  ) async {
+    final query = await FirebaseFirestore.instance
+        .collection('dose_events')
+        .where('medicationId', isEqualTo: medicationId)
+        .get();
+
+    return query.docs
+        .map((doc) => DoseEvent.fromJson(doc.data(), id: doc.id))
+        .where((event) =>
+            !event.scheduledAt.isBefore(startDate) &&
+            !event.scheduledAt.isAfter(endDate))
+        .toList();
+  }
+
+  Future<void> createBatch(List<DoseEvent> events) async {
+    if (events.isEmpty) return;
+    
+    final batch = FirebaseFirestore.instance.batch();
+    final collection = FirebaseFirestore.instance.collection('dose_events');
+
+    for (final event in events) {
+      batch.set(collection.doc(event.id), event.toJson());
+    }
+
+    await batch.commit();
   }
 }

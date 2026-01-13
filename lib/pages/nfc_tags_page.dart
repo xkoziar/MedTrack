@@ -25,6 +25,7 @@ class _NfcTagsPageState extends State<NfcTagsPage> {
 
   List<NfcTag> _tags = [];
   bool _isLoading = true;
+  int _refreshKey = 0;
 
   @override
   void initState() {
@@ -110,14 +111,34 @@ class _NfcTagsPageState extends State<NfcTagsPage> {
     }
   }
 
+  Future<void> _manageMedications(NfcTag tag) async {
+    await NfcTagDialogs.showManageMedicationsDialog(context, tag);
+    await _loadTags();
+    setState(() => _refreshKey++);
+  }
+
   Future<int> _getMedicationCount(NfcTag tag) async {
     final userId = _authService.user?.uid;
     if (userId == null) return 0;
 
     try {
       final medications = await _medicationService.getUserMedications(userId);
-      return medications.where((med) => med.nfcTagId == tag.id).length;
+      final assigned = medications.where((med) => med.nfcTagIds.contains(tag.id)).toList();
+      final count = assigned.length;
+
+      debugPrint('=== Medication Count for ${tag.name} ===');
+      debugPrint('Total medications in system: ${medications.length}');
+      debugPrint('Medications with tag ${tag.id}: $count');
+      if (assigned.isNotEmpty) {
+        debugPrint('Assigned medications:');
+        for (final med in assigned) {
+          debugPrint('  - ${med.name} (nfcTagIds: ${med.nfcTagIds})');
+        }
+      }
+
+      return count;
     } catch (e) {
+      debugPrint('Error getting medication count: $e');
       return 0;
     }
   }
@@ -151,6 +172,7 @@ class _NfcTagsPageState extends State<NfcTagsPage> {
                   (context, index) {
                     final tag = _tags[index];
                     return FutureBuilder<int>(
+                      key: ValueKey('${tag.id}_$_refreshKey'),
                       future: _getMedicationCount(tag),
                       builder: (context, snapshot) {
                         final medCount = snapshot.data ?? 0;
@@ -161,14 +183,28 @@ class _NfcTagsPageState extends State<NfcTagsPage> {
                             subtitle: 'Tag ID: ${tag.tagId}\n$medCount medication${medCount != 1 ? 's' : ''}',
                             showChevron: false,
                             trailing: PopupMenuButton<String>(
+                              icon: const Icon(Icons.more_vert),
                               onSelected: (value) {
-                                if (value == 'rename') {
+                                if (value == 'manage') {
+                                  _manageMedications(tag);
+                                } else if (value == 'rename') {
                                   _renameTag(tag);
                                 } else if (value == 'delete') {
                                   _deleteTag(tag);
                                 }
                               },
-                              itemBuilder: (context) => [
+                              itemBuilder: (context) {
+                                return [
+                                const PopupMenuItem(
+                                  value: 'manage',
+                                  child: Row(
+                                    children: [
+                                      Icon(Icons.medication, size: 20),
+                                      SizedBox(width: 12),
+                                      Text('Manage Medications'),
+                                    ],
+                                  ),
+                                ),
                                 const PopupMenuItem(
                                   value: 'rename',
                                   child: Row(
@@ -189,7 +225,8 @@ class _NfcTagsPageState extends State<NfcTagsPage> {
                                     ],
                                   ),
                                 ),
-                              ],
+                              ];
+                              },
                             ),
                           ),
                         );

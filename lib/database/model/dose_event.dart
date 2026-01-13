@@ -1,5 +1,6 @@
 import 'package:json_annotation/json_annotation.dart';
 import 'package:med_track/database/model/entity.dart';
+import 'package:med_track/utils/constants.dart';
 import 'package:uuid/uuid.dart';
 
 part 'dose_event.g.dart';
@@ -13,7 +14,6 @@ class DoseEvent implements IEntity {
   final String medicationId;
   final DateTime scheduledAt;
   final DateTime? takenAt;
-  final DoseStatus status;
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -23,16 +23,11 @@ class DoseEvent implements IEntity {
     required this.medicationId,
     required this.scheduledAt,
     this.takenAt,
-    required this.status,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) : id = id ?? const Uuid().v4(),
        createdAt = createdAt ?? DateTime.now(),
-       updatedAt = updatedAt ?? DateTime.now(),
-       assert(
-         status != DoseStatus.taken || takenAt != null,
-         'takenAt must be provided if status is taken',
-       );
+       updatedAt = updatedAt ?? DateTime.now();
 
   factory DoseEvent.fromJson(Map<String, dynamic> json, {String? id}) {
     final doseEvent = _$DoseEventFromJson(json);
@@ -47,7 +42,6 @@ class DoseEvent implements IEntity {
     String? medicationId,
     DateTime? scheduledAt,
     DateTime? takenAt,
-    DoseStatus? status,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) {
@@ -57,11 +51,22 @@ class DoseEvent implements IEntity {
       medicationId: medicationId ?? this.medicationId,
       scheduledAt: scheduledAt ?? this.scheduledAt,
       takenAt: takenAt ?? this.takenAt,
-      status: status ?? this.status,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );
   }
 }
 
-enum DoseStatus { taken, missed, pending }
+bool isTaken(DoseEvent event) => event.takenAt != null;
+
+bool isMissed(DoseEvent event, [DateTime? now]) {
+  now ??= DateTime.now();
+  return event.takenAt == null &&
+         now.isAfter(event.scheduledAt.add(const Duration(minutes: MedicationConstants.doseLateThresholdMinutes)));
+}
+
+bool isUpcoming(DoseEvent event, [DateTime? now]) {
+  now ??= DateTime.now();
+  return event.takenAt == null &&
+         now.isBefore(event.scheduledAt.add(const Duration(minutes: MedicationConstants.doseLateThresholdMinutes)));
+}

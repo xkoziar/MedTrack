@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 
-import '../../../components/common/custom_text_field.dart';
-import '../../../utils/constants.dart';
-import '../../../utils/validators.dart';
+import 'package:med_track/components/common/custom_text_field.dart';
+import 'package:med_track/utils/constants.dart';
+import 'package:med_track/utils/validators.dart';
 
 class DeleteAccountDialog extends StatefulWidget {
   final Future<void> Function(String password) onDelete;

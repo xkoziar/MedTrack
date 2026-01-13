@@ -1,79 +1,160 @@
-import 'package:collection/collection.dart';
 import 'package:med_track/database/model/dose_event.dart';
+import 'package:med_track/database/model/medication.dart';
+import 'package:med_track/utils/constants.dart';
 
-double calculateAdherence(List<DoseEvent> events, int days) {
-  final now = DateTime.now();
-  final startDate = now.subtract(Duration(days: days));
+class _DoseCounts {
+  final int expected;
+  final int taken;
 
-  final relevantEvents = events.where((event) {
-    return event.scheduledAt.isAfter(startDate) &&
-        event.scheduledAt.isBefore(now) &&
-        event.status != DoseStatus.pending;
-  }).toList();
+  _DoseCounts(this.expected, this.taken);
 
-  if (relevantEvents.isEmpty) {
-    return 100.0;
-  }
-
-  final takenCount = relevantEvents
-      .where((event) => event.status == DoseStatus.taken)
-      .length;
-
-  return (takenCount / relevantEvents.length) * 100;
+  double get adherencePercent => expected > 0 ? (taken / expected) * 100 : 100.0;
 }
 
-String formatAdherence(List<DoseEvent> allEvents, int days) {
-  final now = DateTime.now();
-  final startDate = now.subtract(Duration(days: days));
+/// Calculate expected and taken doses from medication schedules and events.
+_DoseCounts _calculateDoseCounts(
+  List<DoseEvent> events,
+  DateTime startDate,
+  DateTime endDate,
+  List<Medication> medications,
+) {
+  int expectedDoses = 0;
+  int takenDoses = 0;
+  final cutoffTime = endDate.subtract(const Duration(minutes: MedicationConstants.doseLateThresholdMinutes));
 
-  final relevantEvents = allEvents.where((event) {
-    return event.scheduledAt.isAfter(startDate) &&
-        event.scheduledAt.isBefore(now) &&
-        event.status != DoseStatus.pending;
-  }).toList();
-
-  final takenCount = relevantEvents
-      .where((event) => event.status == DoseStatus.taken)
-      .length;
-
-  final totalCount = relevantEvents.length;
-  final adherence = totalCount > 0 ? (takenCount / totalCount) * 100 : 100.0;
-
-  return '${adherence.toStringAsFixed(0)}% ($takenCount/$totalCount doses)';
-}
-
-int calculateStreak(List<DoseEvent> events) {
-  if (events.isEmpty) return 0;
-
-  final relevantEvents = events.where(
-    (e) => e.status == DoseStatus.missed || e.status == DoseStatus.taken,
-  );
-
-  final eventsByDay = groupBy(relevantEvents, (DoseEvent event) {
-    final date = event.scheduledAt;
-    return DateTime(date.year, date.month, date.day);
-  });
-
-  final today = DateTime.now();
-  var currentDate = DateTime(today.year, today.month, today.day);
-
-  final lastMissedDay = eventsByDay.entries
-      .lastWhereOrNull(
-        (entry) => entry.value.any((e) => e.status == DoseStatus.missed),
-      )
-      ?.key;
-
-  if (lastMissedDay == null) {
-    if (eventsByDay.keys.isEmpty) return 0;
-    final firstEventDay = eventsByDay.keys.reduce(
-      (a, b) => a.isBefore(b) ? a : b,
+  final takenScheduledTimes = <String>{};
+  for (final e in events.where((e) => isTaken(e))) {
+    final normalizedTime = DateTime(
+      e.scheduledAt.year,
+      e.scheduledAt.month,
+      e.scheduledAt.day,
+      e.scheduledAt.hour,
+      e.scheduledAt.minute,
     );
-    return today.difference(firstEventDay).inDays + 1;
+    takenScheduledTimes.add(_dateTimeKey(normalizedTime));
   }
 
-  if (lastMissedDay.isAtSameMomentAs(currentDate)) {
-    return 0;
+  for (final med in medications.where((m) => m.isActive)) {
+    final medStart = med.startDate.isAfter(startDate) ? med.startDate : startDate;
+    final medEnd = med.endDate != null && med.endDate!.isBefore(endDate)
+        ? med.endDate!
+        : endDate;
+
+    for (var date = DateTime(medStart.year, medStart.month, medStart.day);
+        date.isBefore(medEnd);
+        date = date.add(const Duration(days: 1))) {
+      if (!med.scheduleDays.contains(date.weekday)) continue;
+
+      for (final timeStr in med.scheduleTimes) {
+        final parts = timeStr.split(':');
+        final hour = int.parse(parts[0]);
+        final minute = int.parse(parts[1]);
+        final scheduledTime = DateTime(date.year, date.month, date.day, hour, minute);
+
+        if (scheduledTime.isBefore(cutoffTime)) {
+          expectedDoses++;
+          if (takenScheduledTimes.contains(_dateTimeKey(scheduledTime))) {
+            takenDoses++;
+          }
+        }
+      }
+    }
   }
 
-  return currentDate.difference(lastMissedDay).inDays;
+  return _DoseCounts(expectedDoses, takenDoses);
+}
+
+String _dateTimeKey(DateTime dt) => '${dt.year}-${dt.month}-${dt.day}-${dt.hour}-${dt.minute}';
+
+double calculateAdherence(
+  List<DoseEvent> events,
+  int days,
+  List<Medication> medications,
+) {
+  final now = DateTime.now();
+  final startDate = now.subtract(Duration(days: days));
+  return _calculateDoseCounts(events, startDate, now, medications).adherencePercent;
+}
+
+String formatAdherence(
+  List<DoseEvent> allEvents,
+  int days,
+  List<Medication> medications,
+) {
+  final now = DateTime.now();
+  final startDate = now.subtract(Duration(days: days));
+  final counts = _calculateDoseCounts(allEvents, startDate, now, medications);
+  return '${counts.adherencePercent.toStringAsFixed(0)}% (${counts.taken}/${counts.expected} doses)';
+}
+
+int calculateStreak(List<DoseEvent> events, List<Medication> medications) {
+  final now = DateTime.now();
+  final today = DateTime(now.year, now.month, now.day);
+
+  final activeMeds = medications.where((m) => m.isActive).toList();
+  if (activeMeds.isEmpty) return 0;
+
+  final earliestStart = activeMeds
+      .map((m) => DateTime(m.startDate.year, m.startDate.month, m.startDate.day))
+      .reduce((a, b) => a.isBefore(b) ? a : b);
+
+  final takenScheduledTimes = {
+    for (final e in events.where((e) => isTaken(e)))
+      _dateTimeKey(e.scheduledAt)
+  };
+
+  int streak = 0;
+  var checkDate = today.subtract(const Duration(days: 1));
+
+  while (!checkDate.isBefore(earliestStart)) {
+    final dayResult = _checkDayCompletion(
+      checkDate, activeMeds, takenScheduledTimes, now,
+    );
+
+    if (dayResult == _DayResult.missed) break;
+    if (dayResult == _DayResult.complete) streak++;
+
+    checkDate = checkDate.subtract(const Duration(days: 1));
+  }
+
+  return streak;
+}
+
+enum _DayResult { complete, missed, noDoses }
+
+_DayResult _checkDayCompletion(
+  DateTime date,
+  List<Medication> meds,
+  Set<String> takenTimes,
+  DateTime now,
+) {
+  bool dayHasDoses = false;
+  final cutoff = now.subtract(const Duration(minutes: MedicationConstants.doseLateThresholdMinutes));
+
+  for (final med in meds) {
+    final medStart = DateTime(med.startDate.year, med.startDate.month, med.startDate.day);
+    if (date.isBefore(medStart)) continue;
+    if (med.endDate != null) {
+      final medEnd = DateTime(med.endDate!.year, med.endDate!.month, med.endDate!.day);
+      if (date.isAfter(medEnd)) continue;
+    }
+    if (!med.scheduleDays.contains(date.weekday)) continue;
+
+    for (final timeStr in med.scheduleTimes) {
+      final parts = timeStr.split(':');
+      final scheduledTime = DateTime(
+        date.year, date.month, date.day,
+        int.parse(parts[0]), int.parse(parts[1]),
+      );
+
+      if (scheduledTime.isAfter(cutoff)) continue;
+
+      dayHasDoses = true;
+      if (!takenTimes.contains(_dateTimeKey(scheduledTime))) {
+        return _DayResult.missed;
+      }
+    }
+  }
+
+  return dayHasDoses ? _DayResult.complete : _DayResult.noDoses;
 }

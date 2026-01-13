@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import '../../model/nfc_tag.dart';
-import '../../repository/firestore_repository.dart';
+import 'package:med_track/database/model/nfc_tag.dart';
+import 'package:med_track/database/repository/firestore_repository.dart';
+import 'package:med_track/utils/nfc_tag_formatter.dart';
 
 class NfcTagDatabaseService extends FirestoreRepository<NfcTag> {
   NfcTagDatabaseService()
@@ -10,7 +11,6 @@ class NfcTagDatabaseService extends FirestoreRepository<NfcTag> {
           toJson: (tag) => tag.toJson(),
         );
 
-  // Get all NFC tags for a user
   Future<List<NfcTag>> getUserTags(String userId) async {
     final query = await FirebaseFirestore.instance
         .collection('nfc_tags')
@@ -22,7 +22,6 @@ class NfcTagDatabaseService extends FirestoreRepository<NfcTag> {
         .toList();
   }
 
-  // Stream of user's NFC tags
   Stream<List<NfcTag>> observeUserTags(String userId) {
     return FirebaseFirestore.instance
         .collection('nfc_tags')
@@ -35,7 +34,6 @@ class NfcTagDatabaseService extends FirestoreRepository<NfcTag> {
         );
   }
 
-  // Find tag by NFC chip ID
   Future<NfcTag?> findByTagId(String userId, String tagId) async {
     final query = await FirebaseFirestore.instance
         .collection('nfc_tags')
@@ -47,7 +45,17 @@ class NfcTagDatabaseService extends FirestoreRepository<NfcTag> {
     return NfcTag.fromJson(query.docs.first.data(), id: query.docs.first.id);
   }
 
-  // Get tags for a specific medication
+  Future<NfcTag?> findTagWithFallback(String userId, String identifier) async {
+    var tag = await findByTagId(userId, identifier);
+
+    if (tag == null && identifier.contains(':')) {
+      final normalizedId = NfcTagFormatter.normalizeTagId(identifier);
+      tag = await findByTagId(userId, normalizedId);
+    }
+
+    return tag;
+  }
+
   Future<List<NfcTag>> getTagsForMedication(
     String userId,
     String medicationId,
@@ -58,7 +66,6 @@ class NfcTagDatabaseService extends FirestoreRepository<NfcTag> {
         .toList();
   }
 
-  // Add medication to tag
   Future<void> addMedicationToTag(String tagId, String medicationId) async {
     final tag = await get(tagId);
     if (tag == null) return;
@@ -72,7 +79,6 @@ class NfcTagDatabaseService extends FirestoreRepository<NfcTag> {
     }
   }
 
-  // Remove medication from tag
   Future<void> removeMedicationFromTag(
     String tagId,
     String medicationId,
@@ -91,7 +97,6 @@ class NfcTagDatabaseService extends FirestoreRepository<NfcTag> {
     await update(tagId, updatedTag);
   }
 
-  // Update tag name
   Future<void> updateTagName(String tagId, String newName) async {
     final tag = await get(tagId);
     if (tag == null) return;

@@ -13,13 +13,11 @@ import 'package:med_track/database/model/medication.dart';
 import 'package:med_track/database/model/nfc_tag.dart';
 import 'package:med_track/utils/constants.dart';
 import 'package:med_track/utils/snackbar_utils.dart';
-import 'package:med_track/utils/nfc_tag_formatter.dart';
-import 'package:nfc_manager/nfc_manager.dart' as nfc_manager;
 
-import '../database/service/auth_service.dart';
-import '../database/service/medication_database_service.dart';
-import '../database/service/nfc/nfc_tag_database_service.dart';
-import '../database/service/nfc/nfc_background_service.dart';
+import 'package:med_track/database/service/auth_service.dart';
+import 'package:med_track/database/service/medication_database_service.dart';
+import 'package:med_track/database/service/nfc/nfc_tag_database_service.dart';
+import 'package:med_track/database/service/nfc/nfc_service.dart';
 
 class AddMedicationPage extends StatefulWidget {
   final Medication? medication;
@@ -46,7 +44,7 @@ class _AddMedicationPageState extends State<AddMedicationPage> {
   bool _isSaving = false;
   late bool _isActive;
 
-  String? _selectedNfcTagId;
+  Set<String> _selectedNfcTagIds = {};
   List<NfcTag> _availableTags = [];
   bool _isLoadingTags = false;
   bool _isScanning = false;
@@ -64,7 +62,7 @@ class _AddMedicationPageState extends State<AddMedicationPage> {
       _dosageController.text = med.dosage;
       _startDate = med.startDate;
       _isActive = med.isActive;
-      _selectedNfcTagId = med.nfcTagId;
+      _selectedNfcTagIds = Set<String>.from(med.nfcTagIds);
       _selectedDays.addAll(med.scheduleDays);
       _selectedTimes.addAll(
         med.scheduleTimes.map((timeStr) {
@@ -104,19 +102,9 @@ class _AddMedicationPageState extends State<AddMedicationPage> {
     }
   }
 
-  Future<NfcTag?> _findTagWithFallback(String userId, String identifier) async {
-    var tag = await _nfcTagService.findByTagId(userId, identifier);
-
-    if (tag == null && identifier.contains(':')) {
-      final normalizedId = NfcTagFormatter.normalizeTagId(identifier);
-      tag = await _nfcTagService.findByTagId(userId, normalizedId);
-    }
-
-    return tag;
-  }
-
   Future<void> _startPersistentNfcSession() async {
-    final isAvailable = await nfc_manager.NfcManager.instance.isAvailable();
+    final nfcService = get<NfcService>();
+    final isAvailable = await nfcService.isNfcAvailable();
     if (!isAvailable) {
       setState(() => _isScanning = false);
       if (mounted) {
@@ -125,12 +113,17 @@ class _AddMedicationPageState extends State<AddMedicationPage> {
       return;
     }
 
-    final nfcService = get<NfcBackgroundService>();
-
-    nfcService.setManualScanCallback((nfc_manager.NfcTag tag) async {
-      nfcService.clearManualScanCallback();
-      await _handleTagDiscovered(tag);
-    });
+    nfcService.scanAndWriteTag(
+      onSuccess: (tag, tagId) async {
+        await _handleNewTagScanned(tagId);
+      },
+      onError: (error) {
+        if (mounted) {
+          setState(() => _isScanning = false);
+          showSnackBar(context, error, backgroundColor: AppColors.danger);
+        }
+      },
+    );
   }
 
   @override
@@ -138,7 +131,7 @@ class _AddMedicationPageState extends State<AddMedicationPage> {
     _nameController.dispose();
     _descriptionController.dispose();
     _dosageController.dispose();
-    get<NfcBackgroundService>().stopIgnoringScans();
+    get<NfcService>().resumeScanning();
     super.dispose();
   }
 
@@ -191,7 +184,7 @@ class _AddMedicationPageState extends State<AddMedicationPage> {
           isActive: _isActive,
           scheduleDays: scheduleDays,
           scheduleTimes: scheduleTimes,
-          nfcTagId: _selectedNfcTagId,
+          nfcTagIds: _selectedNfcTagIds.toList(),
           updatedAt: DateTime.now(),
         );
         await _medicationService.update(medicationToSave.id, medicationToSave);
@@ -210,7 +203,7 @@ class _AddMedicationPageState extends State<AddMedicationPage> {
           isActive: _isActive,
           scheduleDays: scheduleDays,
           scheduleTimes: scheduleTimes,
-          nfcTagId: _selectedNfcTagId,
+          nfcTagIds: _selectedNfcTagIds.toList(),
         );
         await _medicationService.create(medicationToSave);
       }
@@ -289,8 +282,8 @@ class _AddMedicationPageState extends State<AddMedicationPage> {
   Future<void> _scanNewNfcTag() async {
     if (_isScanning) return;
 
-    final nfcService = get<NfcBackgroundService>();
-    await nfcService.startIgnoringScans();
+    final nfcService = get<NfcService>();
+    nfcService.pauseScanning();
 
     setState(() => _isScanning = true);
 
@@ -300,54 +293,68 @@ class _AddMedicationPageState extends State<AddMedicationPage> {
     await _startPersistentNfcSession();
   }
 
-  Future<void> _handleTagDiscovered(nfc_manager.NfcTag nfcTag) async {
-    final identifier = NfcTagFormatter.extractTagId(nfcTag);
-    if (identifier == null) {
-      setState(() => _isScanning = false);
+  Future<void> _handleNewTagScanned(String tagId) async {
+    final nfcService = get<NfcService>();
+
+    if (!mounted) {
+      await nfcService.stopListening();
       return;
     }
-
-    if (!mounted) return;
     setState(() => _isScanning = false);
 
     final userId = _authService.user?.uid;
     if (userId == null) {
-      showSnackBar(context, 'User not authenticated', backgroundColor: AppColors.danger);
+      await nfcService.stopListening();
+      if (mounted) {
+        showSnackBar(context, 'User not authenticated', backgroundColor: AppColors.danger);
+      }
       return;
     }
 
-    final existingTag = await _findTagWithFallback(userId, identifier);
+    final existingTag = await _nfcTagService.findTagWithFallback(userId, tagId);
 
-    if (!mounted) return;
+    if (!mounted) {
+      await nfcService.stopListening();
+      return;
+    }
 
     if (existingTag != null) {
+      // Tag already exists, toggle selection
       setState(() {
-        _selectedNfcTagId = existingTag.id;
-        _isScanning = false;
+        if (_selectedNfcTagIds.contains(existingTag.id)) {
+          _selectedNfcTagIds.remove(existingTag.id);
+        } else {
+          _selectedNfcTagIds.add(existingTag.id);
+        }
       });
       showSnackBar(
         context,
-        'Selected existing tag: ${existingTag.name}',
+        _selectedNfcTagIds.contains(existingTag.id)
+          ? 'Selected tag: ${existingTag.name}'
+          : 'Deselected tag: ${existingTag.name}',
         backgroundColor: AppColors.success,
       );
-
-      final nfcService = get<NfcBackgroundService>();
-      nfcService.stopIgnoringScans();
     } else {
+      // New tag - show naming dialog
       final newTag = await NfcTagDialogs.showNameNewTagDialog(
         context,
-        identifier,
-        nfcTag: nfcTag,
-        pauseScanning: true,
+        tagId,
       );
 
       if (newTag != null) {
         setState(() {
-          _selectedNfcTagId = newTag.id;
+          _selectedNfcTagIds.add(newTag.id);
         });
         await _loadNfcTags();
+
+        if (mounted) {
+          showSnackBar(context, 'Tag registered!', backgroundColor: AppColors.success);
+        }
       }
     }
+
+    // Stop NFC session after dialog closes to prevent Android from reading AAR
+    await nfcService.stopListening();
   }
 
 
@@ -362,9 +369,9 @@ class _AddMedicationPageState extends State<AddMedicationPage> {
         if (!modalContext.mounted) return;
         Navigator.of(modalContext).pop();
 
-        if (_selectedNfcTagId == tag.id) {
-          setState(() => _selectedNfcTagId = null);
-        }
+        setState(() {
+          _selectedNfcTagIds.remove(tag.id);
+        });
         await _loadNfcTags();
 
         if (!mounted) return;
@@ -387,68 +394,81 @@ class _AddMedicationPageState extends State<AddMedicationPage> {
   void _showNfcTagPicker() {
     showModalBottomSheet(
       context: context,
-      builder: (ctx) => SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(AppSpacing.lg),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-            Text('Select NFC Tag', style: AppTextStyles.heading2),
-            const SizedBox(height: AppSpacing.md),
-            if (_availableTags.isEmpty)
-              const Padding(
-                padding: EdgeInsets.all(AppSpacing.lg),
-                child: Text(
-                  'No NFC tags.\nScan a new one below.',
-                  textAlign: TextAlign.center,
-                ),
-              )
-            else
-              ...(_availableTags.map((tag) => ListTile(
-                    leading: Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        gradient: AppGradients.green,
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: const Icon(Icons.nfc, color: Colors.white),
-                    ),
-                    title: Text(tag.name),
-                    trailing: Row(
-                      mainAxisSize: MainAxisSize.min,
+      builder: (ctx) => StatefulBuilder(
+        builder: (context, setSheetState) => SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.all(AppSpacing.lg),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+              Text('Select NFC Tags', style: AppTextStyles.heading2),
+              const SizedBox(height: AppSpacing.md),
+              if (_availableTags.isEmpty)
+                const Padding(
+                  padding: EdgeInsets.all(AppSpacing.lg),
+                  child: Text(
+                    'No NFC tags.\nScan a new one below.',
+                    textAlign: TextAlign.center,
+                  ),
+                )
+              else
+                ...(_availableTags.map((tag) => Row(
                       children: [
-                        if (_selectedNfcTagId == tag.id)
-                          Icon(Icons.check_circle, color: AppColors.success),
+                        Expanded(
+                          child: CheckboxListTile(
+                            value: _selectedNfcTagIds.contains(tag.id),
+                            onChanged: (bool? value) {
+                              setSheetState(() {
+                                if (value == true) {
+                                  _selectedNfcTagIds.add(tag.id);
+                                } else {
+                                  _selectedNfcTagIds.remove(tag.id);
+                                }
+                              });
+                              // Also update parent state
+                              setState(() {});
+                            },
+                            secondary: Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                gradient: AppGradients.green,
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: const Icon(Icons.nfc, color: Colors.white),
+                            ),
+                            title: Text(tag.name),
+                            subtitle: Text(tag.tagId),
+                            controlAffinity: ListTileControlAffinity.leading,
+                            contentPadding: const EdgeInsets.only(left: 8),
+                          ),
+                        ),
                         IconButton(
                           icon: Icon(Icons.delete_outline, color: AppColors.danger),
                           onPressed: () => _confirmDeleteTag(ctx, tag),
                         ),
                       ],
-                    ),
-                    onTap: () {
-                      setState(() => _selectedNfcTagId = tag.id);
-                      Navigator.of(ctx).pop();
-                    },
-                  ))),
-            const Divider(),
-            OutlinedButton.icon(
-              onPressed: () {
-                Navigator.of(ctx).pop();
-                _scanNewNfcTag();
-              },
-              icon: const Icon(Icons.nfc),
-              label: const Text('Scan New NFC Tag'),
-            ),
-            if (_selectedNfcTagId != null)
-              TextButton(
+                    ))),
+              const Divider(),
+              OutlinedButton.icon(
                 onPressed: () {
-                  setState(() => _selectedNfcTagId = null);
                   Navigator.of(ctx).pop();
+                  _scanNewNfcTag();
                 },
-                child: const Text('Remove NFC Tag'),
+                icon: const Icon(Icons.nfc),
+                label: const Text('Scan New NFC Tag'),
               ),
-            ],
+              if (_selectedNfcTagIds.isNotEmpty)
+                TextButton(
+                  onPressed: () {
+                    setSheetState(() => _selectedNfcTagIds.clear());
+                    setState(() {});
+                    Navigator.of(ctx).pop();
+                  },
+                  child: const Text('Clear All Tags'),
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -551,7 +571,7 @@ class _AddMedicationPageState extends State<AddMedicationPage> {
 
   Widget _buildNfcTagSelector() {
     return NfcTagSelector(
-      selectedNfcTagId: _selectedNfcTagId,
+      selectedNfcTagIds: _selectedNfcTagIds,
       availableTags: _availableTags,
       isScanning: _isScanning,
       isLoadingTags: _isLoadingTags,

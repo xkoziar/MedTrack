@@ -2,8 +2,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:med_track/database/service/user_database_service.dart';
 import 'package:rxdart/transformers.dart';
 
-import '../ioc/ioc_container.dart';
-import '../model/app_user.dart';
+import 'package:med_track/database/ioc/ioc_container.dart';
+import 'package:med_track/database/model/app_user.dart';
 
 class AuthService {
   final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;

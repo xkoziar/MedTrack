@@ -41,7 +41,7 @@ class HomePageHelpers {
   }
 
   static Set<String> getTakenMedicationKeys(List<DoseEvent> events) {
-    return events.where((e) => e.status == DoseStatus.taken).map((e) {
+    return events.where((e) => isTaken(e)).map((e) {
       final time =
           '${e.scheduledAt.hour.toString().padLeft(2, '0')}:${e.scheduledAt.minute.toString().padLeft(2, '0')}';
       return '${e.medicationId}_$time';

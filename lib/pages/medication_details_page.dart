@@ -11,11 +11,11 @@ import 'package:med_track/pages/add_medication_page.dart';
 import 'package:med_track/utils/constants.dart';
 import 'package:med_track/utils/handling_stream_builder.dart';
 
-import '../database/ioc/ioc_container.dart';
-import '../database/service/dose_event/dose_event_database_service.dart';
-import '../database/service/medication_database_service.dart';
-import '../utils/helpers/medication_scheduling.dart';
-import '../utils/snackbar_utils.dart';
+import 'package:med_track/database/ioc/ioc_container.dart';
+import 'package:med_track/database/service/dose_event/dose_event_database_service.dart';
+import 'package:med_track/database/service/medication_database_service.dart';
+import 'package:med_track/utils/helpers/medication_scheduling.dart';
+import 'package:med_track/utils/snackbar_utils.dart';
 
 class MedicationDetailPage extends StatelessWidget {
   final Medication medication;
@@ -88,9 +88,11 @@ class MedicationDetailPage extends StatelessWidget {
                     stream: _doseEventService
                         .observeMedicationEventsTodayAndEarlier(
                           medication.id,
-                          limit: 7,
                         ),
-                    builder: (events) => DoseHistoryCard(events: events),
+                    builder: (events) {
+                      final eventsWithVirtual = _addVirtualMissedDoses(events, medication);
+                      return DoseHistoryCard(events: eventsWithVirtual);
+                    },
                   ),
                   const SizedBox(height: AppSpacing.xxl),
                   Column(
@@ -117,6 +119,62 @@ class MedicationDetailPage extends StatelessWidget {
       ),
     );
   }
+
+  List<DoseEvent> _addVirtualMissedDoses(
+    List<DoseEvent> existingEvents,
+    Medication med,
+  ) {
+    final now = DateTime.now();
+    final endOfToday = DateTime(now.year, now.month, now.day, 23, 59, 59);
+    final sevenDaysAgo = DateTime(now.year, now.month, now.day).subtract(const Duration(days: MedicationConstants.scheduleLookAheadDays));
+
+    final recentExistingEvents = existingEvents
+        .where((e) => e.scheduledAt.isAfter(sevenDaysAgo))
+        .toList();
+
+    final existingScheduledTimes = <String>{};
+    for (final event in recentExistingEvents) {
+      existingScheduledTimes.add(_timeKey(event.scheduledAt));
+    }
+
+    final virtualEvents = <DoseEvent>[];
+    final medStart = DateTime(med.startDate.year, med.startDate.month, med.startDate.day);
+    final startDate = medStart.isAfter(sevenDaysAgo) ? medStart : sevenDaysAgo;
+
+    for (var date = startDate; date.isBefore(endOfToday); date = date.add(const Duration(days: 1))) {
+      if (!med.scheduleDays.contains(date.weekday)) continue;
+
+      if (med.endDate != null) {
+        final medEnd = DateTime(med.endDate!.year, med.endDate!.month, med.endDate!.day);
+        if (date.isAfter(medEnd)) break;
+      }
+
+      for (final timeStr in med.scheduleTimes) {
+        final parts = timeStr.split(':');
+        final hour = int.parse(parts[0]);
+        final minute = int.parse(parts[1]);
+        final scheduledTime = DateTime(date.year, date.month, date.day, hour, minute);
+
+        if (scheduledTime.isAfter(now.subtract(const Duration(minutes: MedicationConstants.doseLateThresholdMinutes)))) continue;
+
+        if (!existingScheduledTimes.contains(_timeKey(scheduledTime))) {
+          virtualEvents.add(DoseEvent(
+            userId: med.userId,
+            medicationId: med.id,
+            scheduledAt: scheduledTime,
+            takenAt: null,
+          ));
+        }
+      }
+    }
+
+    final allEvents = [...recentExistingEvents, ...virtualEvents];
+    allEvents.sort((a, b) => b.scheduledAt.compareTo(a.scheduledAt));
+
+    return allEvents.take(10).toList();
+  }
+
+  String _timeKey(DateTime dt) => '${dt.year}-${dt.month}-${dt.day}-${dt.hour}-${dt.minute}';
 
   Future<bool> _showDeleteDialog(BuildContext context, String name) async {
     final ok = await showDialog<bool>(

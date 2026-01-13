@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import '../common/app_card.dart';
-import '../common/app_key_value.dart';
+import 'package:med_track/components/common/app_card.dart';
+import 'package:med_track/components/common/app_key_value.dart';
 
 class UserStatsCard extends StatelessWidget {
   final String thisWeek;
