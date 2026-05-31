@@ -140,6 +140,7 @@ class DoseEventDatabaseService extends FirestoreRepository<DoseEvent> {
     required String medicationId,
     required DateTime scheduledAt,
     required bool taken,
+    DateTime? takenAt,
   }) async {
     final existingEvent = await findEventBySchedule(
       userId: userId,
@@ -152,7 +153,7 @@ class DoseEventDatabaseService extends FirestoreRepository<DoseEvent> {
         await update(
           existingEvent.id,
           existingEvent.copyWith(
-            takenAt: DateTime.now(),
+            takenAt: takenAt ?? DateTime.now(),
             updatedAt: DateTime.now(),
           ),
         );
@@ -175,7 +176,7 @@ class DoseEventDatabaseService extends FirestoreRepository<DoseEvent> {
         userId: userId,
         medicationId: medicationId,
         scheduledAt: scheduledAt,
-        takenAt: DateTime.now(),
+        takenAt: takenAt ?? DateTime.now(),
       );
       await create(event);
     }
@@ -270,15 +271,17 @@ class DoseEventDatabaseService extends FirestoreRepository<DoseEvent> {
 
     return query.docs
         .map((doc) => DoseEvent.fromJson(doc.data(), id: doc.id))
-        .where((event) =>
-            !event.scheduledAt.isBefore(startDate) &&
-            !event.scheduledAt.isAfter(endDate))
+        .where(
+          (event) =>
+              !event.scheduledAt.isBefore(startDate) &&
+              !event.scheduledAt.isAfter(endDate),
+        )
         .toList();
   }
 
   Future<void> createBatch(List<DoseEvent> events) async {
     if (events.isEmpty) return;
-    
+
     final batch = FirebaseFirestore.instance.batch();
     final collection = FirebaseFirestore.instance.collection('dose_events');
 
