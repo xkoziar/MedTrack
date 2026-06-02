@@ -135,7 +135,6 @@ class MedAdherence {
 }
 
 class MedicationConstants {
-
   static const doseReminderAdvanceMinutes = 15;
   static const doseLateThresholdMinutes = 15;
   static const maxDosesPerDay = 24;
@@ -146,4 +145,24 @@ class MedicationConstants {
   static const streakCalculationDays = 365;
 
   static const nfcPackageName = 'pv292.fi.muni.cz.med_track';
+}
+
+class DoseBuddyConstants {
+  static const advertisedName = 'DoseBuddy';
+  static const serviceUuid = '8f5a3a62-47ef-4f2b-9b4d-7d716b7b2201';
+  static const controlCharacteristicUuid =
+      '8f5a3a62-47ef-4f2b-9b4d-7d716b7b2202';
+  static const eventCharacteristicUuid = '8f5a3a62-47ef-4f2b-9b4d-7d716b7b2203';
+  static const scanTimeoutSeconds = 15;
+  static const earlyConfirmationMinutes = 60;
+  static const dispenserWindowMinutes = 60;
+  static const missedAlertGraceMinutes = 60;
+  static const defaultDispenserCapacity = 15;
+  static const maxDispenserCapacity = 15;
+  static const maxManualIntervals = 8;
+  static const prefsKeyPrefix = 'dose_buddy';
+}
+
+class AccountShareConstants {
+  static const placeholderQrPrefix = 'medtrack-account-share-placeholder';
 }

@@ -9,6 +9,7 @@ import 'package:med_track/database/service/medication_database_service.dart';
 import 'package:med_track/database/service/notification_service.dart';
 import 'package:med_track/database/service/user_database_service.dart';
 import 'package:med_track/database/model/app_user.dart';
+import 'package:med_track/pages/account_qr_scanner_page.dart';
 import 'package:med_track/pages/nfc_management_page.dart';
 
 import 'package:med_track/components/profile/dialogs/change_password_dialog.dart';
@@ -66,11 +67,13 @@ class ProfilePage extends StatelessWidget {
                     onChangePassword: () =>
                         _showChangePasswordDialog(context, user),
                     onManageNfcTags: () => _navigateToNfcManagement(context),
-                    onDeleteAccount: () => _showDeleteAccountDialog(context, user),
+                    onDeleteAccount: () =>
+                        _showDeleteAccountDialog(context, user),
                     onToggleNotifications: (value) =>
                         _onToggleNotifications(context, user, value),
                     onReminderChanged: (minutes) =>
                         _onReminderChanged(context, user, minutes),
+                    onScanAccountQr: () => _openAccountQrScanner(context),
                   );
                 },
               );
@@ -92,13 +95,19 @@ class ProfilePage extends StatelessWidget {
 
       if (value) {
         await NotificationService.requestPermission();
-        await NotificationService.scheduleForUser(user.id!, user.reminderMinutes);
+        await NotificationService.scheduleForUser(
+          user.id!,
+          user.reminderMinutes,
+        );
       } else {
         await NotificationService.cancelAll();
       }
 
       if (context.mounted) {
-        showSnackBar(context, value ? 'Notifications enabled' : 'Notifications disabled');
+        showSnackBar(
+          context,
+          value ? 'Notifications enabled' : 'Notifications disabled',
+        );
       }
     } catch (e) {
       if (context.mounted) {
@@ -121,7 +130,9 @@ class ProfilePage extends StatelessWidget {
       }
 
       if (context.mounted) {
-        final msg = minutes == 0 ? 'Reminder set to dose time' : 'Reminder set to $minutes min before';
+        final msg = minutes == 0
+            ? 'Reminder set to dose time'
+            : 'Reminder set to $minutes min before';
         showSnackBar(context, msg);
       }
     } catch (e) {
@@ -197,5 +208,22 @@ class ProfilePage extends StatelessWidget {
       context,
       MaterialPageRoute(builder: (_) => const NfcManagementPage()),
     );
+  }
+
+  Future<void> _openAccountQrScanner(BuildContext context) async {
+    final scannedValue = await Navigator.push<String?>(
+      context,
+      MaterialPageRoute(builder: (_) => const AccountQrScannerPage()),
+    );
+
+    if (!context.mounted || scannedValue == null || scannedValue.isEmpty) {
+      return;
+    }
+
+    final message =
+        scannedValue.startsWith(AccountShareConstants.placeholderQrPrefix)
+        ? 'Placeholder account QR scanned.'
+        : 'QR code scanned.';
+    showSnackBar(context, message);
   }
 }
