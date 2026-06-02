@@ -26,13 +26,16 @@ class NotificationSettingsCard extends StatelessWidget {
         children: [
           Text('Notification Settings', style: AppTextStyles.heading3),
           const SizedBox(height: AppSpacing.sm),
-          SwitchListTile(
-            contentPadding: EdgeInsets.zero,
-            title: const Text('Enable Notifications'),
-            subtitle: const Text('Receive reminders for medication doses'),
-            value: user.notificationsEnabled,
-            activeThumbColor: AppColors.primary,
-            onChanged: onToggle,
+          Material(
+            color: Colors.transparent,
+            child: SwitchListTile(
+              contentPadding: EdgeInsets.zero,
+              title: const Text('Enable Notifications'),
+              subtitle: const Text('Receive reminders for medication doses'),
+              value: user.notificationsEnabled,
+              activeThumbColor: AppColors.primary,
+              onChanged: onToggle,
+            ),
           ),
           if (user.notificationsEnabled) ...[
             const SizedBox(height: AppSpacing.sm),

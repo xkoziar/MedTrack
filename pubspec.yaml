@@ -40,6 +40,8 @@ dependencies:
   nfc_manager:
     path: packages/nfc_manager
   shared_preferences: ^2.5.4
+  flutter_blue_plus: ^2.3.4
+  permission_handler: ^12.0.1
 #  firebase_auth: ^4.3.0
 
   # The following adds the Cupertino Icons font to your application.
@@ -51,6 +53,8 @@ dependencies:
   flutter_local_notifications: ^19.5.0
   timezone: ^0.10.1
   flutter_timezone: ^5.0.1
+  mobile_scanner: ^7.2.0
+  qr_flutter: ^4.1.0
 
 dev_dependencies:
   flutter_test:

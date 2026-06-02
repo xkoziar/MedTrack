@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:med_track/database/ioc/ioc_container.dart';
+import 'package:med_track/database/service/dose_buddy/dose_buddy_service.dart';
 import 'package:med_track/database/service/notification_service.dart';
 import 'package:med_track/pages/history_page.dart';
 import 'package:med_track/pages/home_page.dart';
+import 'package:med_track/pages/med_button_page.dart';
 import 'package:med_track/pages/medication_page.dart';
 import 'package:med_track/pages/profile_page.dart';
 
@@ -15,7 +18,7 @@ class AppShell extends StatefulWidget {
 }
 
 class _AppShellState extends State<AppShell> with WidgetsBindingObserver {
-  int _index = 3;
+  int _index = 4;
 
   void navigateToHome() {
     if (mounted) {
@@ -47,6 +50,7 @@ class _AppShellState extends State<AppShell> with WidgetsBindingObserver {
     super.didChangeAppLifecycleState(state);
     if (state == AppLifecycleState.resumed) {
       _checkNotificationWindow();
+      get<DoseBuddyService>().handleAppResumed();
     }
   }
 
@@ -57,6 +61,29 @@ class _AppShellState extends State<AppShell> with WidgetsBindingObserver {
 
   @override
   Widget build(BuildContext context) {
+    final bottomBar = BottomNavigationBar(
+      currentIndex: _index,
+      onTap: (i) => setState(() => _index = i),
+
+      type: BottomNavigationBarType.fixed,
+      items: const [
+        BottomNavigationBarItem(icon: Icon(Icons.home), label: "Home"),
+        BottomNavigationBarItem(
+          icon: Icon(Icons.history_rounded),
+          label: "History",
+        ),
+        BottomNavigationBarItem(
+          icon: Icon(Icons.list_rounded),
+          label: "MedList",
+        ),
+        BottomNavigationBarItem(
+          icon: Icon(Icons.medication_rounded),
+          label: "DoseBuddy",
+        ),
+        BottomNavigationBarItem(icon: Icon(Icons.person), label: "Profile"),
+      ],
+    );
+
     return Scaffold(
       body: IndexedStack(
         index: _index,
@@ -64,26 +91,19 @@ class _AppShellState extends State<AppShell> with WidgetsBindingObserver {
           const HomePage(key: ValueKey('home_page')),
           HistoryPage(),
           MedicationPage(key: const ValueKey('medication_page')),
+          const MedButtonPage(key: ValueKey('med_button_page')),
           ProfilePage(key: const ValueKey('profile_page')),
         ],
       ),
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _index,
-        onTap: (i) => setState(() => _index = i),
-
-        type: BottomNavigationBarType.fixed,
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: "Home"),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.history_rounded),
-            label: "History",
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.list_rounded),
-            label: "MedList",
-          ),
-          BottomNavigationBarItem(icon: Icon(Icons.person), label: "Profile"),
-        ],
+      bottomNavigationBar: ValueListenableBuilder<bool>(
+        valueListenable: medButtonTutorialOverlayActive,
+        builder: (context, tutorialActive, child) {
+          return AnimatedSwitcher(
+            duration: const Duration(milliseconds: 220),
+            child: tutorialActive ? const SizedBox.shrink() : child,
+          );
+        },
+        child: bottomBar,
       ),
     );
   }

@@ -4,7 +4,7 @@ import 'package:med_track/utils/constants.dart';
 class SecondaryOutlineButton extends StatelessWidget {
   final String label;
   final bool danger;
-  final VoidCallback onPressed;
+  final VoidCallback? onPressed;
   final Icon? icon;
 
   const SecondaryOutlineButton({
@@ -18,6 +18,7 @@ class SecondaryOutlineButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final c = danger ? AppColors.danger : AppColors.primary;
+    final isEnabled = onPressed != null;
 
     final buttonStyle = AppButtonStyles.primaryOutlinedButton.copyWith(
       foregroundColor: WidgetStateProperty.all<Color>(c),
@@ -31,17 +32,20 @@ class SecondaryOutlineButton extends StatelessWidget {
 
     final textLabel = Text(label, style: AppTextStyles.bodyMediumSemiBold);
 
-    return icon != null
-        ? OutlinedButton.icon(
-            onPressed: onPressed,
-            style: buttonStyle,
-            icon: icon!,
-            label: textLabel,
-          )
-        : OutlinedButton(
-            onPressed: onPressed,
-            style: buttonStyle,
-            child: textLabel,
-          );
+    return Opacity(
+      opacity: isEnabled ? 1 : 0.55,
+      child: icon != null
+          ? OutlinedButton.icon(
+              onPressed: onPressed,
+              style: buttonStyle,
+              icon: icon!,
+              label: textLabel,
+            )
+          : OutlinedButton(
+              onPressed: onPressed,
+              style: buttonStyle,
+              child: textLabel,
+            ),
+    );
   }
 }

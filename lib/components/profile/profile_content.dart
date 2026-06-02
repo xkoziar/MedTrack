@@ -4,6 +4,7 @@ import 'package:med_track/components/common/gradient_header.dart';
 import 'package:med_track/components/profile/danger_zone_card.dart';
 import 'package:med_track/components/profile/notification_settings_card.dart';
 import 'package:med_track/components/profile/profile_action_buttons.dart';
+import 'package:med_track/components/profile/share_account_card.dart';
 import 'package:med_track/components/profile/user_info_card.dart';
 import 'package:med_track/components/profile/user_stats_card.dart';
 import 'package:med_track/database/model/app_user.dart';
@@ -22,6 +23,7 @@ class ProfileContent extends StatelessWidget {
   final VoidCallback onDeleteAccount;
   final void Function(bool) onToggleNotifications;
   final void Function(int) onReminderChanged;
+  final VoidCallback onScanAccountQr;
 
   const ProfileContent({
     super.key,
@@ -34,20 +36,41 @@ class ProfileContent extends StatelessWidget {
     required this.onDeleteAccount,
     required this.onToggleNotifications,
     required this.onReminderChanged,
+    required this.onScanAccountQr,
   });
 
   @override
   Widget build(BuildContext context) {
-    final adherence30d = calculateAdherence(events, MedAdherence.days30, medications);
-    final thisWeekStats = formatAdherence(events, MedAdherence.days7, medications);
-    final thisMonthStats = formatAdherence(events, MedAdherence.days30, medications);
+    final adherence30d = calculateAdherence(
+      events,
+      MedAdherence.days30,
+      medications,
+    );
+    final thisWeekStats = formatAdherence(
+      events,
+      MedAdherence.days7,
+      medications,
+    );
+    final thisMonthStats = formatAdherence(
+      events,
+      MedAdherence.days30,
+      medications,
+    );
     final streak = calculateStreak(events, medications);
 
     return CustomScrollView(
       slivers: [
-        const GradientSliverHeader(
+        GradientSliverHeader(
           title: 'Profile',
           subtitle: 'Settings and stats',
+          trailing: IconButton(
+            onPressed: onScanAccountQr,
+            tooltip: 'Scan account QR',
+            icon: const Icon(
+              Icons.qr_code_scanner_rounded,
+              color: Colors.white,
+            ),
+          ),
         ),
         SliverToBoxAdapter(
           child: Padding(
@@ -81,6 +104,8 @@ class ProfileContent extends StatelessWidget {
                 ),
                 const SizedBox(height: AppSpacing.md),
                 DangerZoneCard(onDelete: onDeleteAccount),
+                const SizedBox(height: AppSpacing.md),
+                ShareAccountCard(user: user),
                 const SizedBox(height: 80),
               ],
             ),
