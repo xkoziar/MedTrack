@@ -89,104 +89,42 @@ class _AuthPageState extends State<AuthPage> {
     }
   }
 
+  void _switchMode(bool toLogin) {
+    if (_isLogin == toLogin) return;
+    setState(() {
+      _isLogin = toLogin;
+      _formKey.currentState?.reset();
+      _passwdController.clear();
+      _confirmPasswdController.clear();
+      if (_isLogin) {
+        _usernameController.clear();
+      }
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Center(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 32),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                const Icon(Icons.medical_services, size: 60),
-                const SizedBox(height: 12),
-
-                const Text(
-                  'MedTrack',
-                  style: TextStyle(fontSize: 35, fontWeight: FontWeight.bold),
-                ),
-                Text(
-                  'Take your meds ahh app',
-                  style: TextStyle(fontSize: 18, color: Colors.grey[600]),
-                ),
-
-                const SizedBox(height: 40),
-
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
+      body: DecoratedBox(
+        decoration: const BoxDecoration(gradient: AppGradients.purple),
+        child: SafeArea(
+          child: Center(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.xl,
+                vertical: AppSpacing.xxl,
+              ),
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 440),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    _buildSwitchButton("Login", true),
-                    const SizedBox(width: 8),
-                    _buildSwitchButton("Register", false),
+                    _branding(),
+                    const SizedBox(height: AppSpacing.xxl),
+                    _formCard(),
                   ],
                 ),
-
-                const SizedBox(height: 25),
-
-                if (!_isLogin) ...[
-                  CustomTextField(
-                    label: "Username",
-                    hintText: 'Your name',
-                    controller: _usernameController,
-                    validator: (value) {
-                      return Validators.username(value?.trim());
-                    },
-                  ),
-                  const SizedBox(height: AppSpacing.lg),
-                ],
-
-                CustomTextField(
-                  label: "Email",
-                  hintText: 'your@email.com',
-                  controller: _emailController,
-                  validator: (value) => _isLogin
-                      ? Validators.loginEmail(value)
-                      : Validators.email(value?.trim()),
-                ),
-                const SizedBox(height: AppSpacing.lg),
-
-                CustomTextField(
-                  label: "Password",
-                  hintText: '••••••••',
-                  obscure: true,
-                  controller: _passwdController,
-                  validator: (value) => _isLogin
-                      ? Validators.loginPassword(value)
-                      : Validators.password(value),
-                ),
-                const SizedBox(height: AppSpacing.lg),
-
-                if (!_isLogin) ...[
-                  CustomTextField(
-                    label: "Confirm Password",
-                    hintText: '••••••••',
-                    obscure: true,
-                    controller: _confirmPasswdController,
-                    validator: (value) {
-                      return Validators.confirmPassword(
-                        _passwdController.text,
-                        value,
-                      );
-                    },
-                  ),
-                  const SizedBox(height: AppSpacing.lg),
-                ],
-
-                const SizedBox(height: 20),
-
-                ElevatedButton(
-                  onPressed: _isSubmitting ? null : _submit,
-                  child: _isSubmitting
-                      ? const SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : Text(_isLogin ? 'Login' : 'Register'),
-                ),
-              ],
+              ),
             ),
           ),
         ),
@@ -194,29 +132,203 @@ class _AuthPageState extends State<AuthPage> {
     );
   }
 
-  Widget _buildSwitchButton(String text, bool isLoginButton) {
-    final bool isActive = (isLoginButton == _isLogin);
+  Widget _branding() {
+    return Column(
+      children: [
+        Container(
+          width: 88,
+          height: 88,
+          decoration: BoxDecoration(
+            color: Colors.white,
+            shape: BoxShape.circle,
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.15),
+                blurRadius: 18,
+                offset: const Offset(0, 8),
+              ),
+            ],
+          ),
+          child: const Icon(
+            Icons.medication_rounded,
+            size: 46,
+            color: AppColors.primary,
+          ),
+        ),
+        const SizedBox(height: AppSpacing.lg),
+        const Text(
+          'MedTrack',
+          style: TextStyle(
+            fontSize: 34,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
+        ),
+        const SizedBox(height: AppSpacing.xs),
+        Text(
+          'Never miss a dose',
+          style: TextStyle(
+            fontSize: AppTextSizes.bodyMedium,
+            color: Colors.white.withValues(alpha: 0.85),
+          ),
+        ),
+      ],
+    );
+  }
 
-    return TextButton(
-      onPressed: () {
-        if (_isLogin == isLoginButton) return;
-
-        setState(() {
-          _isLogin = isLoginButton;
-
-          _formKey.currentState?.reset();
-          _passwdController.clear();
-          _confirmPasswdController.clear();
-          if (_isLogin) {
-            _usernameController.clear();
-          }
-        });
-      },
-      style: TextButton.styleFrom(
-        backgroundColor: isActive ? Colors.deepPurpleAccent : Colors.grey[400],
-        foregroundColor: isActive ? Colors.white : Colors.black54,
+  Widget _formCard() {
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.xl),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.12),
+            blurRadius: 24,
+            offset: const Offset(0, 10),
+          ),
+        ],
       ),
-      child: Text(text),
+      child: Form(
+        key: _formKey,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            _modeSwitch(),
+            const SizedBox(height: AppSpacing.xl),
+            if (!_isLogin) ...[
+              CustomTextField(
+                label: 'Username',
+                hintText: 'Your name',
+                prefixIcon: Icons.person_outline_rounded,
+                textInputAction: TextInputAction.next,
+                controller: _usernameController,
+                validator: (value) => Validators.username(value?.trim()),
+              ),
+              const SizedBox(height: AppSpacing.lg),
+            ],
+            CustomTextField(
+              label: 'Email',
+              hintText: 'your@email.com',
+              prefixIcon: Icons.mail_outline_rounded,
+              keyboardType: TextInputType.emailAddress,
+              textInputAction: TextInputAction.next,
+              controller: _emailController,
+              validator: (value) => _isLogin
+                  ? Validators.loginEmail(value)
+                  : Validators.email(value?.trim()),
+            ),
+            const SizedBox(height: AppSpacing.lg),
+            CustomTextField(
+              label: 'Password',
+              hintText: 'Your password',
+              obscure: true,
+              prefixIcon: Icons.lock_outline_rounded,
+              textInputAction:
+                  _isLogin ? TextInputAction.done : TextInputAction.next,
+              controller: _passwdController,
+              validator: (value) => _isLogin
+                  ? Validators.loginPassword(value)
+                  : Validators.password(value),
+            ),
+            if (!_isLogin) ...[
+              const SizedBox(height: AppSpacing.lg),
+              CustomTextField(
+                label: 'Confirm password',
+                hintText: 'Repeat your password',
+                obscure: true,
+                prefixIcon: Icons.lock_outline_rounded,
+                controller: _confirmPasswdController,
+                validator: (value) => Validators.confirmPassword(
+                  _passwdController.text,
+                  value,
+                ),
+              ),
+            ],
+            const SizedBox(height: AppSpacing.xl),
+            _submitButton(),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _modeSwitch() {
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.xs),
+      decoration: BoxDecoration(
+        color: Colors.grey[200],
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: Row(
+        children: [
+          _segment('Login', true),
+          _segment('Register', false),
+        ],
+      ),
+    );
+  }
+
+  Widget _segment(String text, bool isLoginSegment) {
+    final isActive = isLoginSegment == _isLogin;
+
+    return Expanded(
+      child: GestureDetector(
+        onTap: () => _switchMode(isLoginSegment),
+        behavior: HitTestBehavior.opaque,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 180),
+          padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
+          decoration: BoxDecoration(
+            gradient: isActive ? AppGradients.purple : null,
+            borderRadius: BorderRadius.circular(10),
+          ),
+          alignment: Alignment.center,
+          child: Text(
+            text,
+            style: AppTextStyles.bodyMediumSemiBold.copyWith(
+              color: isActive ? Colors.white : AppColors.textSecondary,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _submitButton() {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        gradient: AppGradients.purple,
+        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+      ),
+      child: ElevatedButton(
+        onPressed: _isSubmitting ? null : _submit,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Colors.transparent,
+          shadowColor: Colors.transparent,
+          disabledBackgroundColor: Colors.transparent,
+          padding: const EdgeInsets.symmetric(vertical: AppSpacing.lg),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+          ),
+        ),
+        child: _isSubmitting
+            ? const SizedBox(
+                width: 22,
+                height: 22,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: Colors.white,
+                ),
+              )
+            : Text(
+                _isLogin ? 'Login' : 'Create account',
+                style: AppTextStyles.bodyMediumSemiBold.copyWith(
+                  color: Colors.white,
+                ),
+              ),
+      ),
     );
   }
 
