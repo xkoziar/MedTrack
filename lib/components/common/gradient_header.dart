@@ -44,6 +44,26 @@ class GradientSliverHeader extends StatelessWidget {
                     icon: const Icon(Icons.arrow_back, color: Colors.white),
                   ),
                   const SizedBox(width: 6),
+                ] else ...[
+                  Container(
+                    width: 42,
+                    height: 42,
+                    clipBehavior: Clip.antiAlias,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(11),
+                      border: Border.all(
+                        color: Colors.white.withValues(alpha: 0.55),
+                        width: 1.5,
+                      ),
+                    ),
+                    child: Image.asset(
+                      'assets/branding/medtrack_logo.png',
+                      width: 42,
+                      height: 42,
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                  const SizedBox(width: AppSpacing.md),
                 ],
                 Expanded(
                   child: Column(

@@ -1,11 +1,11 @@
 {
-    "name": "med_track",
-    "short_name": "med_track",
+    "name": "MedTrack",
+    "short_name": "MedTrack",
     "start_url": ".",
     "display": "standalone",
-    "background_color": "#0175C2",
-    "theme_color": "#0175C2",
-    "description": "Mobilní a webová aplikace pro sledování užívání léků. Pomáhá uživatelům nezapomínat na pravidelné dávky prostřednictvím připomínek a jednoduchého záznamu o užití. Volitelně lze použít NFC štítek nalepený na krabičce s léky pro rychlé potvrzení užití. Cílem je poskytnout přehledný systém pro evidenci léků, dávkování a sledování historie užívání.",
+    "background_color": "#FFFFFF",
+    "theme_color": "#667EEA",
+    "description": "MedTrack helps elderly and disabled users stay on top of their medication: reminders, simple dose confirmation (tap, NFC or the DoseBuddy device), adherence tracking and caregiver sharing.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [

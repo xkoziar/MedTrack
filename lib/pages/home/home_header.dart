@@ -11,14 +11,30 @@ class HomeHeader extends StatelessWidget {
     final now = DateTime.now();
     final greeting = _getGreeting();
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        Text('$greeting, $userName', style: AppTextStyles.heading2),
-        const SizedBox(height: AppSpacing.xs),
-        Text(
-          _formatDate(now),
-          style: TextStyle(fontSize: 16, color: AppColors.textSecondary),
+        ClipRRect(
+          borderRadius: BorderRadius.circular(12),
+          child: Image.asset(
+            'assets/branding/medtrack_logo.png',
+            width: 48,
+            height: 48,
+          ),
+        ),
+        const SizedBox(width: AppSpacing.md),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('$greeting, $userName', style: AppTextStyles.heading2),
+              const SizedBox(height: AppSpacing.xs),
+              Text(
+                _formatDate(now),
+                style: TextStyle(fontSize: 16, color: AppColors.textSecondary),
+              ),
+            ],
+          ),
         ),
       ],
     );

@@ -97,7 +97,7 @@ class _MedButtonPageState extends State<MedButtonPage> {
                       CustomScrollView(
                         slivers: [
                           const GradientSliverHeader(
-                            title: 'DoseBuddy',
+                            title: 'Dose Buddy',
                             subtitle: 'Simple control of your dispenser',
                           ),
                           SliverToBoxAdapter(
@@ -161,11 +161,6 @@ class _MedButtonPageState extends State<MedButtonPage> {
         : '${session.remainingDoses}/${session.dispenserCapacity}';
 
     return AppCard(
-      gradient: LinearGradient(
-        begin: Alignment.topLeft,
-        end: Alignment.bottomRight,
-        colors: [accentColor.withAlpha(26), Colors.white, Colors.white],
-      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -408,7 +403,7 @@ class _MedButtonPageState extends State<MedButtonPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('DoseBuddy', style: AppTextStyles.heading3),
+                    Text('Dose Buddy', style: AppTextStyles.heading3),
                     const SizedBox(height: AppSpacing.xs),
                     Text(
                       device == null
@@ -532,7 +527,7 @@ class _MedButtonPageState extends State<MedButtonPage> {
           ),
           const SizedBox(height: AppSpacing.lg),
           if (device == null)
-            const Text('Pair DoseBuddy first.')
+            const Text('Pair Dose Buddy first.')
           else if (medications.isEmpty)
             const Text('No medications available yet.')
           else if (selectedMedications.isEmpty)
@@ -572,7 +567,7 @@ class _MedButtonPageState extends State<MedButtonPage> {
           Text('Missed dose', style: AppTextStyles.heading3),
           const SizedBox(height: AppSpacing.sm),
           Text(
-            'If a dose is missed, DoseBuddy reminds you for one more hour.',
+            'If a dose is missed, Dose Buddy reminds you for one more hour.',
             style: AppTextStyles.bodyMedium.copyWith(
               color: AppColors.textSecondary,
               height: 1.5,
@@ -580,7 +575,7 @@ class _MedButtonPageState extends State<MedButtonPage> {
           ),
           const SizedBox(height: AppSpacing.md),
           if (device == null)
-            const Text('Pair DoseBuddy first.')
+            const Text('Pair Dose Buddy first.')
           else
             SwitchListTile.adaptive(
               contentPadding: EdgeInsets.zero,
@@ -607,7 +602,7 @@ class _MedButtonPageState extends State<MedButtonPage> {
           Text('Recent activity', style: AppTextStyles.heading3),
           const SizedBox(height: AppSpacing.sm),
           Text(
-            'Open the latest DoseBuddy updates only when you need them.',
+            'Open the latest Dose Buddy updates only when you need them.',
             style: AppTextStyles.bodyMedium.copyWith(
               color: AppColors.textSecondary,
               height: 1.5,
@@ -644,7 +639,7 @@ class _MedButtonPageState extends State<MedButtonPage> {
           ),
           const SizedBox(height: AppSpacing.lg),
           if (device == null)
-            const Text('Pair DoseBuddy first.')
+            const Text('Pair Dose Buddy first.')
           else if (intervals.isEmpty)
             const Text('No times added yet.')
           else
@@ -728,7 +723,7 @@ class _MedButtonPageState extends State<MedButtonPage> {
                   Text('Recent activity', style: AppTextStyles.heading3),
                   const SizedBox(height: AppSpacing.sm),
                   Text(
-                    'Latest signals reported by DoseBuddy.',
+                    'Latest signals reported by Dose Buddy.',
                     style: AppTextStyles.bodyMedium.copyWith(
                       color: AppColors.textSecondary,
                       height: 1.5,
@@ -771,7 +766,7 @@ class _MedButtonPageState extends State<MedButtonPage> {
         final session = _doseBuddyService.sessionStateNow;
         showSnackBar(
           context,
-          session.message ?? 'No DoseBuddy device found nearby.',
+          session.message ?? 'No Dose Buddy device found nearby.',
           backgroundColor: switch (session.status) {
             DoseBuddyConnectionStatus.attention => AppColors.danger,
             DoseBuddyConnectionStatus.bluetoothOff => AppColors.warning,
@@ -809,8 +804,8 @@ class _MedButtonPageState extends State<MedButtonPage> {
         showSnackBar(
           context,
           candidates.length == 1
-              ? 'DoseBuddy found and paired automatically.'
-              : 'DoseBuddy paired successfully.',
+              ? 'Dose Buddy found and paired automatically.'
+              : 'Dose Buddy paired successfully.',
           backgroundColor: AppColors.success,
         );
       }
@@ -818,7 +813,7 @@ class _MedButtonPageState extends State<MedButtonPage> {
       if (mounted) {
         showSnackBar(
           context,
-          'DoseBuddy pairing failed: $e',
+          'Dose Buddy pairing failed: $e',
           backgroundColor: AppColors.danger,
         );
       }
@@ -839,7 +834,7 @@ class _MedButtonPageState extends State<MedButtonPage> {
       if (mounted) {
         showSnackBar(
           context,
-          'Could not connect DoseBuddy: $e',
+          'Could not connect Dose Buddy: $e',
           backgroundColor: AppColors.danger,
         );
       }
@@ -851,7 +846,7 @@ class _MedButtonPageState extends State<MedButtonPage> {
       final didSync = await _doseBuddyService.syncConfiguration();
       final syncState = _doseBuddyService.sessionStateNow;
       final syncMessage = didSync
-          ? 'DoseBuddy updated.'
+          ? 'Dose Buddy updated.'
           : syncState.status == DoseBuddyConnectionStatus.connected
           ? 'Dispenser is connected. The app will try the update again in a moment.'
           : syncState.message ?? 'Connect the dispenser before updating.';
@@ -867,7 +862,7 @@ class _MedButtonPageState extends State<MedButtonPage> {
       if (mounted) {
         showSnackBar(
           context,
-          'DoseBuddy sync failed: $e',
+          'Dose Buddy sync failed: $e',
           backgroundColor: AppColors.danger,
         );
       }
@@ -880,7 +875,7 @@ class _MedButtonPageState extends State<MedButtonPage> {
       if (mounted) {
         showSnackBar(
           context,
-          'DoseBuddy refill confirmed.',
+          'Dose Buddy refill confirmed.',
           backgroundColor: AppColors.success,
         );
       }
@@ -906,7 +901,7 @@ class _MedButtonPageState extends State<MedButtonPage> {
     }
     _clearTutorialResponseTimeout();
     if (mounted) {
-      showSnackBar(context, 'DoseBuddy disconnected.');
+      showSnackBar(context, 'Dose Buddy disconnected.');
     }
   }
 
@@ -1018,9 +1013,9 @@ class _MedButtonPageState extends State<MedButtonPage> {
       context: context,
       builder: (dialogContext) {
         return AlertDialog(
-          title: const Text('Forget DoseBuddy?'),
+          title: const Text('Forget Dose Buddy?'),
           content: const Text(
-            'This removes the paired device, linked medications, and manual intervals from DoseBuddy.',
+            'This removes the paired device, linked medications, and manual intervals from Dose Buddy.',
           ),
           actions: [
             TextButton(
@@ -1042,7 +1037,7 @@ class _MedButtonPageState extends State<MedButtonPage> {
     if (mounted) {
       showSnackBar(
         context,
-        'DoseBuddy removed.',
+        'Dose Buddy removed.',
         backgroundColor: AppColors.success,
       );
     }
@@ -1149,7 +1144,7 @@ class _MedButtonPageState extends State<MedButtonPage> {
         DoseBuddyConstants.maxManualIntervals) {
       showSnackBar(
         context,
-        'DoseBuddy is limited to ${DoseBuddyConstants.maxManualIntervals} manual intervals.',
+        'Dose Buddy is limited to ${DoseBuddyConstants.maxManualIntervals} manual intervals.',
         backgroundColor: AppColors.warning,
       );
       return;
@@ -1208,7 +1203,7 @@ class _MedButtonPageState extends State<MedButtonPage> {
       if (mounted) {
         showSnackBar(
           context,
-          'DoseBuddy update failed: $e',
+          'Dose Buddy update failed: $e',
           backgroundColor: AppColors.danger,
         );
       }
@@ -1303,7 +1298,7 @@ class _MedButtonPageState extends State<MedButtonPage> {
 
       showSnackBar(
         context,
-        'DoseBuddy tutorial timed out and was closed automatically.',
+        'Dose Buddy tutorial timed out and was closed automatically.',
         backgroundColor: AppColors.warning,
       );
     } catch (e) {
@@ -1316,7 +1311,7 @@ class _MedButtonPageState extends State<MedButtonPage> {
 
       showSnackBar(
         context,
-        'DoseBuddy did not answer. Use Finish tutorial to force the device back to normal mode.',
+        'Dose Buddy did not answer. Use Finish tutorial to force the device back to normal mode.',
         backgroundColor: AppColors.warning,
       );
     }
@@ -1328,7 +1323,7 @@ class _MedButtonPageState extends State<MedButtonPage> {
         session.status == DoseBuddyConnectionStatus.bluetoothOff ||
         session.status == DoseBuddyConnectionStatus.disconnected) {
       throw StateError(
-        session.message ?? 'DoseBuddy tutorial command could not be applied.',
+        session.message ?? 'Dose Buddy tutorial command could not be applied.',
       );
     }
   }
@@ -1519,7 +1514,7 @@ class _MedButtonPageState extends State<MedButtonPage> {
                                                   ),
                                                   Text(
                                                     _tutorialTimedOut
-                                                        ? 'DoseBuddy did not answer.'
+                                                        ? 'Dose Buddy did not answer.'
                                                         : 'Waiting for dispenser...',
                                                     style: AppTextStyles
                                                         .bodyMedium
@@ -1533,7 +1528,7 @@ class _MedButtonPageState extends State<MedButtonPage> {
                                                   Text(
                                                     _tutorialTimedOut
                                                         ? 'Trying to stop the tutorial. If needed, use Finish below.'
-                                                        : 'DoseBuddy is preparing the wheel preview.',
+                                                        : 'Dose Buddy is preparing the wheel preview.',
                                                     textAlign: TextAlign.center,
                                                     style: AppTextStyles
                                                         .bodySmall
@@ -1645,7 +1640,7 @@ class _MedButtonPageState extends State<MedButtonPage> {
           stepKey: 'window_open',
           title: 'Dose window open',
           meaning:
-              'DoseBuddy allows one dispense during the hour before the scheduled time. In the last 10 minutes, the green LED double-blinks every 5 seconds.',
+              'Dose Buddy allows one dispense during the hour before the scheduled time. In the last 10 minutes, the green LED double-blinks every 5 seconds.',
           ledLabel: 'Green LED x2',
           hintLabel: 'One dose ready now',
           accentColor: Color(0xFF33C26F),
@@ -1656,7 +1651,7 @@ class _MedButtonPageState extends State<MedButtonPage> {
           stepKey: 'dispensing',
           title: 'Wheel dispensing',
           meaning:
-              'Pressing the button turns the DoseBuddy wheel, releases one dose, and closes this interval so it cannot be dispensed again.',
+              'Pressing the button turns the Dose Buddy wheel, releases one dose, and closes this interval so it cannot be dispensed again.',
           ledLabel: 'Green confirm',
           hintLabel: 'Interval is finished',
           accentColor: Color(0xFF20B8A8),
@@ -1687,7 +1682,7 @@ class _MedButtonPageState extends State<MedButtonPage> {
           stepKey: 'refill_needed',
           title: 'Refill dispenser',
           meaning:
-              'After 15 dispenses, the red and green LEDs alternate until DoseBuddy is refilled and confirmed in the app.',
+              'After 15 dispenses, the red and green LEDs alternate until Dose Buddy is refilled and confirmed in the app.',
           ledLabel: 'Red + green alternate',
           hintLabel: 'Load 15 new doses',
           accentColor: Color(0xFFFFB84D),
@@ -1708,7 +1703,7 @@ class _MedButtonPageState extends State<MedButtonPage> {
           stepKey: 'waiting',
           title: 'Wheel idle',
           meaning:
-              'No dose is due right now. DoseBuddy stays quiet until the next hour-before-dose window opens.',
+              'No dose is due right now. Dose Buddy stays quiet until the next hour-before-dose window opens.',
           ledLabel: 'LEDs off',
           hintLabel: 'Waiting for next dose',
           accentColor: Color(0xFF8FA6C7),
@@ -1729,7 +1724,7 @@ class _MedButtonPageState extends State<MedButtonPage> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Text('Choose DoseBuddy', style: AppTextStyles.heading3),
+                Text('Choose Dose Buddy', style: AppTextStyles.heading3),
                 const SizedBox(height: AppSpacing.md),
                 ...candidates.map(
                   (candidate) => ListTile(
@@ -1761,7 +1756,7 @@ class _MedButtonPageState extends State<MedButtonPage> {
       case 'already_taken':
         return 'Already dispensed';
       default:
-        return 'DoseBuddy update';
+        return 'Dose Buddy update';
     }
   }
 

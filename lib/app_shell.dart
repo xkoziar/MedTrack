@@ -18,7 +18,7 @@ class AppShell extends StatefulWidget {
 }
 
 class _AppShellState extends State<AppShell> with WidgetsBindingObserver {
-  int _index = 4;
+  int _index = 0;
 
   void navigateToHome() {
     if (mounted) {
@@ -78,7 +78,7 @@ class _AppShellState extends State<AppShell> with WidgetsBindingObserver {
         ),
         BottomNavigationBarItem(
           icon: Icon(Icons.medication_rounded),
-          label: "DoseBuddy",
+          label: "Dose Buddy",
         ),
         BottomNavigationBarItem(icon: Icon(Icons.person), label: "Profile"),
       ],

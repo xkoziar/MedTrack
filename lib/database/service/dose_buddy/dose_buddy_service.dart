@@ -138,7 +138,7 @@ class DoseBuddySessionState {
 
   factory DoseBuddySessionState.initial() => const DoseBuddySessionState(
     status: DoseBuddyConnectionStatus.disconnected,
-    message: 'Pair a DoseBuddy to get started.',
+    message: 'Pair a Dose Buddy to get started.',
   );
 
   DoseBuddySessionState copyWith({
@@ -300,7 +300,7 @@ class DoseBuddyService {
     _emitState(
       sessionStateNow.copyWith(
         status: DoseBuddyConnectionStatus.scanning,
-        message: 'Looking for nearby DoseBuddy devices...',
+        message: 'Looking for nearby Dose Buddy devices...',
       ),
     );
 
@@ -343,7 +343,7 @@ class DoseBuddyService {
         _emitState(
           sessionStateNow.copyWith(
             status: DoseBuddyConnectionStatus.attention,
-            message: 'DoseBuddy scan failed. Check Bluetooth permissions.',
+            message: 'Dose Buddy scan failed. Check Bluetooth permissions.',
           ),
         );
       },
@@ -399,14 +399,14 @@ class DoseBuddyService {
       _emitState(
         sessionStateNow.copyWith(
           status: DoseBuddyConnectionStatus.connecting,
-          message: 'DoseBuddy found. Connecting automatically...',
+          message: 'Dose Buddy found. Connecting automatically...',
         ),
       );
     } else {
       _emitState(
         sessionStateNow.copyWith(
           status: DoseBuddyConnectionStatus.disconnected,
-          message: 'Choose the DoseBuddy device to pair.',
+          message: 'Choose the Dose Buddy device to pair.',
         ),
       );
     }
@@ -444,7 +444,7 @@ class DoseBuddyService {
     _emitState(
       DoseBuddySessionState(
         status: DoseBuddyConnectionStatus.disconnected,
-        message: 'DoseBuddy has been removed.',
+        message: 'Dose Buddy has been removed.',
       ),
     );
   }
@@ -494,7 +494,7 @@ class DoseBuddyService {
       return true;
     } catch (e) {
       if (kDebugMode) {
-        debugPrint('DoseBuddy status refresh failed: $e');
+        debugPrint('Dose Buddy status refresh failed: $e');
       }
       return false;
     }
@@ -532,7 +532,7 @@ class DoseBuddyService {
       _emitState(
         sessionStateNow.copyWith(
           status: DoseBuddyConnectionStatus.syncing,
-          message: 'Updating DoseBuddy schedule...',
+          message: 'Updating Dose Buddy schedule...',
         ),
       );
 
@@ -547,7 +547,7 @@ class DoseBuddyService {
       _emitState(
         sessionStateNow.copyWith(
           status: DoseBuddyConnectionStatus.connected,
-          message: 'DoseBuddy is up to date.',
+          message: 'Dose Buddy is up to date.',
           lastSyncAt: DateTime.now(),
           lastSeenAt: DateTime.now(),
         ),
@@ -555,7 +555,7 @@ class DoseBuddyService {
       return true;
     } catch (e) {
       if (kDebugMode) {
-        debugPrint('DoseBuddy sync failed: $e');
+        debugPrint('Dose Buddy sync failed: $e');
       }
 
       if (_isRetryableControlWriteError(e)) {
@@ -588,7 +588,7 @@ class DoseBuddyService {
     _lastKnownTutorialStepIndex = 0;
     await _sendTutorialCommand(
       type: 'start_demo',
-      message: 'DoseBuddy tutorial is starting...',
+      message: 'Dose Buddy tutorial is starting...',
       nextDemoState: _buildOptimisticTutorialState(_lastKnownTutorialStepIndex),
     );
   }
@@ -596,7 +596,7 @@ class DoseBuddyService {
   Future<void> replayTutorialStep() async {
     await _sendTutorialCommand(
       type: 'demo_replay',
-      message: 'DoseBuddy is replaying this tutorial step.',
+      message: 'Dose Buddy is replaying this tutorial step.',
       nextDemoState: _buildOptimisticTutorialState(_lastKnownTutorialStepIndex),
     );
   }
@@ -608,7 +608,7 @@ class DoseBuddyService {
       await _sendTutorialCommand(
         type: 'demo_next',
         message:
-            'DoseBuddy tutorial finished. The device is back in normal mode.',
+            'Dose Buddy tutorial finished. The device is back in normal mode.',
         nextDemoState: null,
       );
       return;
@@ -617,7 +617,7 @@ class DoseBuddyService {
     _lastKnownTutorialStepIndex++;
     await _sendTutorialCommand(
       type: 'demo_next',
-      message: 'DoseBuddy tutorial is moving to the next mode.',
+      message: 'Dose Buddy tutorial is moving to the next mode.',
       nextDemoState: _buildOptimisticTutorialState(_lastKnownTutorialStepIndex),
     );
   }
@@ -626,7 +626,7 @@ class DoseBuddyService {
     _lastKnownTutorialStepIndex = 0;
     await _sendTutorialCommand(
       type: 'stop_demo',
-      message: 'DoseBuddy tutorial is ending...',
+      message: 'Dose Buddy tutorial is ending...',
       nextDemoState: null,
     );
   }
@@ -634,7 +634,7 @@ class DoseBuddyService {
   Future<void> markDispenserRefilled() async {
     await _sendTutorialCommand(
       type: 'refill_dispenser',
-      message: 'DoseBuddy dispenser refill is being confirmed...',
+      message: 'Dose Buddy dispenser refill is being confirmed...',
       nextDemoState: null,
     );
   }
@@ -653,7 +653,7 @@ class DoseBuddyService {
       _emitState(
         sessionStateNow.copyWith(
           status: DoseBuddyConnectionStatus.attention,
-          message: 'Connect DoseBuddy before starting the tutorial demo.',
+          message: 'Connect Dose Buddy before starting the tutorial demo.',
         ),
       );
       return;
@@ -789,8 +789,8 @@ class DoseBuddyService {
         sessionStateNow.copyWith(
           status: DoseBuddyConnectionStatus.disconnected,
           message: _currentConfig == null
-              ? 'Pair a DoseBuddy to get started.'
-              : 'DoseBuddy is disconnected.',
+              ? 'Pair a Dose Buddy to get started.'
+              : 'Dose Buddy is disconnected.',
         ),
       );
     }
@@ -808,7 +808,7 @@ class DoseBuddyService {
       _emitState(
         const DoseBuddySessionState(
           status: DoseBuddyConnectionStatus.disconnected,
-          message: 'Sign in to pair a DoseBuddy.',
+          message: 'Sign in to pair a Dose Buddy.',
         ),
       );
       return;
@@ -831,7 +831,7 @@ class DoseBuddyService {
       _emitState(
         const DoseBuddySessionState(
           status: DoseBuddyConnectionStatus.disconnected,
-          message: 'Pair a DoseBuddy to get started.',
+          message: 'Pair a Dose Buddy to get started.',
         ),
       );
       return;
@@ -915,7 +915,7 @@ class DoseBuddyService {
         _emitState(
           sessionStateNow.copyWith(
             status: DoseBuddyConnectionStatus.disconnected,
-            message: 'DoseBuddy connection was lost.',
+            message: 'Dose Buddy connection was lost.',
           ),
         );
       }
@@ -927,8 +927,8 @@ class DoseBuddyService {
         deviceId: remoteId,
         deviceName: displayName,
         message: autoConnect
-            ? 'Trying to reconnect to DoseBuddy...'
-            : 'Connecting to DoseBuddy...',
+            ? 'Trying to reconnect to Dose Buddy...'
+            : 'Connecting to Dose Buddy...',
       ),
     );
 
@@ -949,7 +949,7 @@ class DoseBuddyService {
       _emitState(
         sessionStateNow.copyWith(
           status: DoseBuddyConnectionStatus.attention,
-          message: 'DoseBuddy connection failed: $e',
+          message: 'Dose Buddy connection failed: $e',
         ),
       );
     }
@@ -963,7 +963,7 @@ class DoseBuddyService {
       _emitState(
         sessionStateNow.copyWith(
           status: DoseBuddyConnectionStatus.syncing,
-          message: 'Preparing DoseBuddy...',
+          message: 'Preparing Dose Buddy...',
         ),
       );
 
@@ -978,7 +978,7 @@ class DoseBuddyService {
       );
 
       if (doseBuddyService == null) {
-        throw StateError('DoseBuddy BLE service was not found.');
+        throw StateError('Dose Buddy BLE service was not found.');
       }
 
       _controlCharacteristic = doseBuddyService.characteristics
@@ -1000,7 +1000,7 @@ class DoseBuddyService {
           );
 
       if (_controlCharacteristic == null || _eventCharacteristic == null) {
-        throw StateError('DoseBuddy characteristics are missing.');
+        throw StateError('Dose Buddy characteristics are missing.');
       }
 
       await _eventSubscription?.cancel();
@@ -1018,7 +1018,7 @@ class DoseBuddyService {
         _emitState(
           sessionStateNow.copyWith(
             status: DoseBuddyConnectionStatus.connected,
-            message: 'DoseBuddy is connected and ready.',
+            message: 'Dose Buddy is connected and ready.',
             lastSeenAt: DateTime.now(),
           ),
         );
@@ -1035,7 +1035,7 @@ class DoseBuddyService {
       _emitState(
         sessionStateNow.copyWith(
           status: DoseBuddyConnectionStatus.attention,
-          message: 'Could not prepare DoseBuddy: $e',
+          message: 'Could not prepare Dose Buddy: $e',
         ),
       );
     } finally {
@@ -1077,7 +1077,7 @@ class DoseBuddyService {
             status: DoseBuddyConnectionStatus.connected,
             message:
                 (message['message'] as String?) ??
-                'DoseBuddy sent a fresh status update.',
+                'Dose Buddy sent a fresh status update.',
             batteryLevel: batteryLevel,
             remainingDoses: remainingDoses,
             dispenserCapacity: dispenserCapacity,
@@ -1092,10 +1092,10 @@ class DoseBuddyService {
         );
         return;
       case 'demo_step':
-        final title = (message['title'] as String?) ?? 'DoseBuddy tutorial';
+        final title = (message['title'] as String?) ?? 'Dose Buddy tutorial';
         final description =
             (message['description'] as String?) ??
-            'DoseBuddy is previewing what this state means.';
+            'Dose Buddy is previewing what this state means.';
         final stepIndex = _asInt(message['index']) ?? 1;
         final totalSteps = _asInt(message['total']) ?? 1;
         _lastKnownTutorialStepIndex = (stepIndex - 1).clamp(
@@ -1108,7 +1108,7 @@ class DoseBuddyService {
             status: DoseBuddyConnectionStatus.connected,
             message:
                 (message['message'] as String?) ??
-                'DoseBuddy tutorial is running.',
+                'Dose Buddy tutorial is running.',
             lastSeenAt: DateTime.now(),
             isAlarmActive: false,
             refillNeeded: refillNeeded ?? sessionStateNow.refillNeeded,
@@ -1132,7 +1132,7 @@ class DoseBuddyService {
             status: DoseBuddyConnectionStatus.connected,
             message:
                 (message['message'] as String?) ??
-                'DoseBuddy tutorial finished. The device is back in normal mode.',
+                'Dose Buddy tutorial finished. The device is back in normal mode.',
             lastSeenAt: DateTime.now(),
             isAlarmActive: false,
             refillNeeded: refillNeeded ?? sessionStateNow.refillNeeded,
@@ -1169,7 +1169,7 @@ class DoseBuddyService {
         _emitState(
           sessionStateNow.copyWith(
             status: DoseBuddyConnectionStatus.connected,
-            message: 'DoseBuddy reports this dose was already confirmed.',
+            message: 'Dose Buddy reports this dose was already confirmed.',
             batteryLevel: batteryLevel,
             remainingDoses: remainingDoses,
             dispenserCapacity: dispenserCapacity,
@@ -1186,7 +1186,7 @@ class DoseBuddyService {
         _emitState(
           sessionStateNow.copyWith(
             status: DoseBuddyConnectionStatus.attention,
-            message: 'DoseBuddy needs attention for a missed interval.',
+            message: 'Dose Buddy needs attention for a missed interval.',
             batteryLevel: batteryLevel,
             remainingDoses: remainingDoses,
             dispenserCapacity: dispenserCapacity,
@@ -1206,7 +1206,7 @@ class DoseBuddyService {
             status: DoseBuddyConnectionStatus.attention,
             message:
                 (message['message'] as String?) ??
-                'DoseBuddy dispenser needs a refill.',
+                'Dose Buddy dispenser needs a refill.',
             batteryLevel: batteryLevel,
             remainingDoses: remainingDoses ?? 0,
             dispenserCapacity:
@@ -1295,8 +1295,8 @@ class DoseBuddyService {
       sessionStateNow.copyWith(
         status: DoseBuddyConnectionStatus.connected,
         message: feedbackType == 'confirmed'
-            ? 'DoseBuddy dispensed one dose.'
-            : 'DoseBuddy says this interval was already confirmed.',
+            ? 'Dose Buddy dispensed one dose.'
+            : 'Dose Buddy says this interval was already confirmed.',
         batteryLevel: batteryLevel,
         remainingDoses: remainingDoses,
         dispenserCapacity: dispenserCapacity,
@@ -1494,7 +1494,7 @@ class DoseBuddyService {
       _emitState(
         const DoseBuddySessionState(
           status: DoseBuddyConnectionStatus.unsupported,
-          message: 'DoseBuddy pairing is available in the Android app.',
+          message: 'Dose Buddy pairing is available in the Android app.',
         ),
       );
       return false;
@@ -1516,7 +1516,7 @@ class DoseBuddyService {
         sessionStateNow.copyWith(
           status: DoseBuddyConnectionStatus.attention,
           message:
-              'DoseBuddy needs Bluetooth permissions to connect in the background.',
+              'Dose Buddy needs Bluetooth permissions to connect in the background.',
         ),
       );
       return false;
@@ -1536,7 +1536,7 @@ class DoseBuddyService {
         _emitState(
           sessionStateNow.copyWith(
             status: DoseBuddyConnectionStatus.bluetoothOff,
-            message: 'Turn on Bluetooth to connect DoseBuddy.',
+            message: 'Turn on Bluetooth to connect Dose Buddy.',
           ),
         );
         return false;
@@ -1605,10 +1605,10 @@ class DoseBuddyService {
     }
 
     if (rawDeviceCount == 0) {
-      return 'No DoseBuddy found nearby. BLE scan saw 0 devices. This usually points to phone-side scan blocking or Android scan throttling.';
+      return 'No Dose Buddy found nearby. BLE scan saw 0 devices. This usually points to phone-side scan blocking or Android scan throttling.';
     }
 
-    return 'No DoseBuddy found nearby. BLE scan saw $rawDeviceCount device(s), but none exposed the DoseBuddy name or service UUID.';
+    return 'No Dose Buddy found nearby. BLE scan saw $rawDeviceCount device(s), but none exposed the Dose Buddy name or service UUID.';
   }
 
   void _logScanDebug(String message) {
@@ -1698,8 +1698,8 @@ class DoseBuddyService {
           sessionStateNow.copyWith(
             status: DoseBuddyConnectionStatus.disconnected,
             message: _currentConfig == null
-                ? 'Pair a DoseBuddy to get started.'
-                : 'DoseBuddy is ready to reconnect.',
+                ? 'Pair a Dose Buddy to get started.'
+                : 'Dose Buddy is ready to reconnect.',
           ),
         );
       }
@@ -1711,7 +1711,7 @@ class DoseBuddyService {
       _emitState(
         sessionStateNow.copyWith(
           status: DoseBuddyConnectionStatus.bluetoothOff,
-          message: 'Turn on Bluetooth to connect DoseBuddy.',
+          message: 'Turn on Bluetooth to connect Dose Buddy.',
         ),
       );
     }

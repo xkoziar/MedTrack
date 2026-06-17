@@ -136,23 +136,23 @@ class _AuthPageState extends State<AuthPage> {
     return Column(
       children: [
         Container(
-          width: 88,
-          height: 88,
           decoration: BoxDecoration(
-            color: Colors.white,
-            shape: BoxShape.circle,
+            borderRadius: BorderRadius.circular(22),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withValues(alpha: 0.15),
-                blurRadius: 18,
-                offset: const Offset(0, 8),
+                color: Colors.black.withValues(alpha: 0.20),
+                blurRadius: 20,
+                offset: const Offset(0, 10),
               ),
             ],
           ),
-          child: const Icon(
-            Icons.medication_rounded,
-            size: 46,
-            color: AppColors.primary,
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(22),
+            child: Image.asset(
+              'assets/branding/medtrack_logo.png',
+              width: 96,
+              height: 96,
+            ),
           ),
         ),
         const SizedBox(height: AppSpacing.lg),
@@ -192,63 +192,71 @@ class _AuthPageState extends State<AuthPage> {
       ),
       child: Form(
         key: _formKey,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            _modeSwitch(),
-            const SizedBox(height: AppSpacing.xl),
-            if (!_isLogin) ...[
+        child: AutofillGroup(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              _modeSwitch(),
+              const SizedBox(height: AppSpacing.xl),
+              if (!_isLogin) ...[
+                CustomTextField(
+                  label: 'Username',
+                  hintText: 'Your name',
+                  prefixIcon: Icons.person_outline_rounded,
+                  textInputAction: TextInputAction.next,
+                  autofillHints: const [AutofillHints.newUsername],
+                  controller: _usernameController,
+                  validator: (value) => Validators.username(value?.trim()),
+                ),
+                const SizedBox(height: AppSpacing.lg),
+              ],
               CustomTextField(
-                label: 'Username',
-                hintText: 'Your name',
-                prefixIcon: Icons.person_outline_rounded,
+                label: 'Email',
+                hintText: 'your@email.com',
+                prefixIcon: Icons.mail_outline_rounded,
+                keyboardType: TextInputType.emailAddress,
                 textInputAction: TextInputAction.next,
-                controller: _usernameController,
-                validator: (value) => Validators.username(value?.trim()),
+                autofillHints: const [AutofillHints.email],
+                controller: _emailController,
+                validator: (value) => _isLogin
+                    ? Validators.loginEmail(value)
+                    : Validators.email(value?.trim()),
               ),
               const SizedBox(height: AppSpacing.lg),
-            ],
-            CustomTextField(
-              label: 'Email',
-              hintText: 'your@email.com',
-              prefixIcon: Icons.mail_outline_rounded,
-              keyboardType: TextInputType.emailAddress,
-              textInputAction: TextInputAction.next,
-              controller: _emailController,
-              validator: (value) => _isLogin
-                  ? Validators.loginEmail(value)
-                  : Validators.email(value?.trim()),
-            ),
-            const SizedBox(height: AppSpacing.lg),
-            CustomTextField(
-              label: 'Password',
-              hintText: 'Your password',
-              obscure: true,
-              prefixIcon: Icons.lock_outline_rounded,
-              textInputAction:
-                  _isLogin ? TextInputAction.done : TextInputAction.next,
-              controller: _passwdController,
-              validator: (value) => _isLogin
-                  ? Validators.loginPassword(value)
-                  : Validators.password(value),
-            ),
-            if (!_isLogin) ...[
-              const SizedBox(height: AppSpacing.lg),
               CustomTextField(
-                label: 'Confirm password',
-                hintText: 'Repeat your password',
+                label: 'Password',
+                hintText: 'Your password',
                 obscure: true,
                 prefixIcon: Icons.lock_outline_rounded,
-                controller: _confirmPasswdController,
-                validator: (value) => Validators.confirmPassword(
-                  _passwdController.text,
-                  value,
-                ),
+                textInputAction:
+                    _isLogin ? TextInputAction.done : TextInputAction.next,
+                autofillHints: _isLogin
+                    ? const [AutofillHints.password]
+                    : const [AutofillHints.newPassword],
+                controller: _passwdController,
+                validator: (value) => _isLogin
+                    ? Validators.loginPassword(value)
+                    : Validators.password(value),
               ),
+              if (!_isLogin) ...[
+                const SizedBox(height: AppSpacing.lg),
+                CustomTextField(
+                  label: 'Confirm password',
+                  hintText: 'Repeat your password',
+                  obscure: true,
+                  prefixIcon: Icons.lock_outline_rounded,
+                  autofillHints: const [AutofillHints.newPassword],
+                  controller: _confirmPasswdController,
+                  validator: (value) => Validators.confirmPassword(
+                    _passwdController.text,
+                    value,
+                  ),
+                ),
+              ],
+              const SizedBox(height: AppSpacing.xl),
+              _submitButton(),
             ],
-            const SizedBox(height: AppSpacing.xl),
-            _submitButton(),
-          ],
+          ),
         ),
       ),
     );
