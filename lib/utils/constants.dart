@@ -165,4 +165,7 @@ class DoseBuddyConstants {
 
 class AccountShareConstants {
   static const placeholderQrPrefix = 'medtrack-account-share-placeholder';
+
+  /// Prefix for real account-sharing QR codes (see [AccountSharePayload]).
+  static const qrPrefix = 'medtrack-account-share';
 }

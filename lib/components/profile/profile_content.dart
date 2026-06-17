@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:med_track/components/common/adherence_rate_card.dart';
 import 'package:med_track/components/common/gradient_header.dart';
 import 'package:med_track/components/profile/danger_zone_card.dart';
+import 'package:med_track/components/profile/linked_accounts_card.dart';
 import 'package:med_track/components/profile/notification_settings_card.dart';
 import 'package:med_track/components/profile/profile_action_buttons.dart';
 import 'package:med_track/components/profile/share_account_card.dart';
@@ -106,6 +107,8 @@ class ProfileContent extends StatelessWidget {
                 DangerZoneCard(onDelete: onDeleteAccount),
                 const SizedBox(height: AppSpacing.md),
                 ShareAccountCard(user: user),
+                const SizedBox(height: AppSpacing.md),
+                LinkedAccountsCard(currentUserId: user.id!),
                 const SizedBox(height: 80),
               ],
             ),

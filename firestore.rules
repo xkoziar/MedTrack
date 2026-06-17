@@ -1,0 +1,80 @@
+rules_version = '2';
+
+// MedTrack Firestore security rules.
+//
+// Every domain document is scoped by a `userId` field (except dose_buddy_devices
+// whose doc id *is* the userId, and account_links whose doc id is
+// "<patientUserId>_<caregiverUserId>").
+//
+// Owners have full access to their own data. A caregiver gets READ-ONLY access
+// to a patient's medications and dose_events when an account_links document
+// linking the two exists (created when the caregiver scans the patient's QR).
+//
+// Deploy with:  firebase deploy --only firestore:rules
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    // True when the signed-in user is a caregiver linked to `patientUserId`.
+    // Uses the deterministic account_links id so no query is required.
+    function isLinkedCaregiver(patientUserId) {
+      return isSignedIn() &&
+        exists(/databases/$(database)/documents/account_links/$(patientUserId + '_' + request.auth.uid));
+    }
+
+    match /users/{userId} {
+      allow read, write: if isOwner(userId);
+    }
+
+    match /medications/{docId} {
+      allow read: if isOwner(resource.data.userId) ||
+                     isLinkedCaregiver(resource.data.userId);
+      allow create: if isOwner(request.resource.data.userId);
+      allow update, delete: if isOwner(resource.data.userId);
+    }
+
+    match /dose_events/{docId} {
+      allow read: if isOwner(resource.data.userId) ||
+                     isLinkedCaregiver(resource.data.userId);
+      allow create: if isOwner(request.resource.data.userId);
+      allow update, delete: if isOwner(resource.data.userId);
+    }
+
+    match /nfc_tags/{docId} {
+      allow read, update, delete: if isOwner(resource.data.userId);
+      allow create: if isOwner(request.resource.data.userId);
+    }
+
+    match /dose_buddy_devices/{userId} {
+      allow read, write: if isOwner(userId);
+    }
+
+    match /dose_buddy_events/{docId} {
+      allow read, update, delete: if isOwner(resource.data.userId);
+      allow create: if isOwner(request.resource.data.userId);
+    }
+
+    // Caregiver/family links. Doc id must be "<patientUserId>_<caregiverUserId>".
+    // The caregiver creates the link; either party can read it or remove it.
+    match /account_links/{linkId} {
+      allow read: if isSignedIn() &&
+        (request.auth.uid == resource.data.patientUserId ||
+         request.auth.uid == resource.data.caregiverUserId);
+
+      allow create: if isSignedIn() &&
+        request.auth.uid == request.resource.data.caregiverUserId &&
+        linkId == request.resource.data.patientUserId + '_' + request.resource.data.caregiverUserId;
+
+      allow delete: if isSignedIn() &&
+        (request.auth.uid == resource.data.patientUserId ||
+         request.auth.uid == resource.data.caregiverUserId);
+    }
+  }
+}

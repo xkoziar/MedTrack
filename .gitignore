@@ -46,3 +46,12 @@ app.*.map.json
 
 # gradle
 packages/nfc_manager/example/android/.gradle/*
+
+# Project helper / working files (not part of the app, not needed in the repo)
+CLAUDE.md
+AGENTS.md
+.claude/
+PROJECT_INFO_-_Smart_Service_2026.pptx
+*.pptx.tmp
+~$*.pptx
+*.pptx

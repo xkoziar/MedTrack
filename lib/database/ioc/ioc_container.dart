@@ -4,6 +4,7 @@ import 'package:med_track/database/service/dose_buddy/dose_buddy_event_database_
 import 'package:med_track/database/service/dose_buddy/dose_buddy_service.dart';
 import 'package:med_track/database/service/auth_service.dart';
 import 'package:med_track/database/service/dose_event/dose_event_database_service.dart';
+import 'package:med_track/database/service/account_link_database_service.dart';
 
 import 'package:med_track/database/service/user_database_service.dart';
 import 'package:med_track/database/service/medication_database_service.dart';
@@ -20,6 +21,7 @@ class IocContainer {
     get.registerSingleton(DoseEventDatabaseService());
     get.registerSingleton(NfcTagDatabaseService());
     get.registerSingleton(NfcService());
+    get.registerSingleton(AccountLinkDatabaseService());
     get.registerSingleton(DoseBuddyDeviceDatabaseService());
     get.registerSingleton(DoseBuddyEventDatabaseService());
     get.registerSingleton(DoseBuddyService());

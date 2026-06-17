@@ -29,17 +29,17 @@ DoseBuddyDevice _$DoseBuddyDeviceFromJson(Map<String, dynamic> json) =>
           : DateTime.parse(json['updatedAt'] as String),
     );
 
-Map<String, dynamic> _$DoseBuddyDeviceToJson(DoseBuddyDevice instance) =>
-    <String, dynamic>{
-      'userId': instance.userId,
-      'displayName': instance.displayName,
-      'bleDeviceId': instance.bleDeviceId,
-      'medicationIds': instance.medicationIds,
-      'manualIntervals': instance.manualIntervals,
-            'allowLateDispenseAfterMissedHour':
-                    instance.allowLateDispenseAfterMissedHour,
-      'autoReconnectEnabled': instance.autoReconnectEnabled,
-      'isEnabled': instance.isEnabled,
-      'createdAt': instance.createdAt.toIso8601String(),
-      'updatedAt': instance.updatedAt.toIso8601String(),
-    };
+Map<String, dynamic> _$DoseBuddyDeviceToJson(
+  DoseBuddyDevice instance,
+) => <String, dynamic>{
+  'userId': instance.userId,
+  'displayName': instance.displayName,
+  'bleDeviceId': instance.bleDeviceId,
+  'medicationIds': instance.medicationIds,
+  'manualIntervals': instance.manualIntervals,
+  'allowLateDispenseAfterMissedHour': instance.allowLateDispenseAfterMissedHour,
+  'autoReconnectEnabled': instance.autoReconnectEnabled,
+  'isEnabled': instance.isEnabled,
+  'createdAt': instance.createdAt.toIso8601String(),
+  'updatedAt': instance.updatedAt.toIso8601String(),
+};

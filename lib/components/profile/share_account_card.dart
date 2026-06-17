@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:med_track/components/common/app_card.dart';
 import 'package:med_track/database/model/app_user.dart';
 import 'package:med_track/utils/constants.dart';
+import 'package:med_track/utils/helpers/account_share_payload.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 
 class ShareAccountCard extends StatelessWidget {
@@ -9,9 +10,12 @@ class ShareAccountCard extends StatelessWidget {
 
   const ShareAccountCard({super.key, required this.user});
 
-  String get _placeholderPayload {
-    final accountId = user.id ?? 'unknown';
-    return '${AccountShareConstants.placeholderQrPrefix}:$accountId';
+  String get _sharePayload {
+    return AccountSharePayload(
+      userId: user.id ?? '',
+      name: user.name,
+      email: user.email,
+    ).encode();
   }
 
   @override
@@ -23,7 +27,8 @@ class ShareAccountCard extends StatelessWidget {
           Text('Share account', style: AppTextStyles.heading3),
           const SizedBox(height: AppSpacing.sm),
           Text(
-            'Later this QR flow will let family members view the account. For now it only generates a placeholder value.',
+            'Show this QR code to a family member or caregiver. When they scan it '
+            'from their own MedTrack account, they will be linked to yours.',
             style: AppTextStyles.bodyMedium.copyWith(
               color: AppColors.textSecondary,
               height: 1.4,
@@ -60,7 +65,8 @@ class ShareAccountCard extends StatelessWidget {
                 Text('Share account', style: AppTextStyles.heading3),
                 const SizedBox(height: AppSpacing.sm),
                 Text(
-                  'This QR code currently contains only placeholder data for future account sharing.',
+                  'Ask your caregiver to open the QR scanner on their Profile '
+                  'tab and scan this code to link to your account.',
                   textAlign: TextAlign.center,
                   style: AppTextStyles.bodyMedium.copyWith(
                     color: AppColors.textSecondary,
@@ -82,7 +88,7 @@ class ShareAccountCard extends StatelessWidget {
                     ],
                   ),
                   child: QrImageView(
-                    data: _placeholderPayload,
+                    data: _sharePayload,
                     size: 240,
                     eyeStyle: const QrEyeStyle(
                       eyeShape: QrEyeShape.square,
@@ -98,7 +104,7 @@ class ShareAccountCard extends StatelessWidget {
                 Text(user.name, style: AppTextStyles.bodyMediumSemiBold),
                 const SizedBox(height: AppSpacing.xs),
                 Text(
-                  'Placeholder value: $_placeholderPayload',
+                  user.email,
                   textAlign: TextAlign.center,
                   style: AppTextStyles.bodySmall.copyWith(
                     color: AppColors.textSecondary,

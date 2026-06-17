@@ -3,6 +3,8 @@ import 'package:med_track/components/profile/profile_content.dart';
 import 'package:med_track/database/ioc/ioc_container.dart';
 import 'package:med_track/database/model/dose_event.dart';
 import 'package:med_track/database/model/medication.dart';
+import 'package:med_track/database/model/account_link.dart';
+import 'package:med_track/database/service/account_link_database_service.dart';
 import 'package:med_track/database/service/auth_service.dart';
 import 'package:med_track/database/service/dose_event/dose_event_database_service.dart';
 import 'package:med_track/database/service/medication_database_service.dart';
@@ -11,6 +13,7 @@ import 'package:med_track/database/service/user_database_service.dart';
 import 'package:med_track/database/model/app_user.dart';
 import 'package:med_track/pages/account_qr_scanner_page.dart';
 import 'package:med_track/pages/nfc_management_page.dart';
+import 'package:med_track/utils/helpers/account_share_payload.dart';
 
 import 'package:med_track/components/profile/dialogs/change_password_dialog.dart';
 import 'package:med_track/components/profile/dialogs/delete_account_dialog.dart';
@@ -25,6 +28,7 @@ class ProfilePage extends StatelessWidget {
   final _userDbService = get<UserDatabaseService>();
   final _doseEventDbService = get<DoseEventDatabaseService>();
   final _medicationDbService = get<MedicationDatabaseService>();
+  final _accountLinkDbService = get<AccountLinkDatabaseService>();
   late final _userId = _authService.user?.uid;
 
   @override
@@ -73,7 +77,8 @@ class ProfilePage extends StatelessWidget {
                         _onToggleNotifications(context, user, value),
                     onReminderChanged: (minutes) =>
                         _onReminderChanged(context, user, minutes),
-                    onScanAccountQr: () => _openAccountQrScanner(context),
+                    onScanAccountQr: () =>
+                        _openAccountQrScanner(context, user),
                   );
                 },
               );
@@ -210,7 +215,10 @@ class ProfilePage extends StatelessWidget {
     );
   }
 
-  Future<void> _openAccountQrScanner(BuildContext context) async {
+  Future<void> _openAccountQrScanner(
+    BuildContext context,
+    AppUser caregiver,
+  ) async {
     final scannedValue = await Navigator.push<String?>(
       context,
       MaterialPageRoute(builder: (_) => const AccountQrScannerPage()),
@@ -220,10 +228,45 @@ class ProfilePage extends StatelessWidget {
       return;
     }
 
-    final message =
-        scannedValue.startsWith(AccountShareConstants.placeholderQrPrefix)
-        ? 'Placeholder account QR scanned.'
-        : 'QR code scanned.';
-    showSnackBar(context, message);
+    final payload = AccountSharePayload.tryParse(scannedValue);
+    if (payload == null) {
+      showSnackBar(context, 'This is not a MedTrack account QR code.');
+      return;
+    }
+
+    if (payload.userId == caregiver.id) {
+      showSnackBar(context, 'You cannot link your own account.');
+      return;
+    }
+
+    final patientLabel = payload.name.trim().isNotEmpty
+        ? payload.name
+        : payload.email;
+
+    try {
+      final created = await _accountLinkDbService.createLinkIfMissing(
+        AccountLink(
+          id: AccountLink.buildId(payload.userId, caregiver.id!),
+          patientUserId: payload.userId,
+          patientName: payload.name,
+          patientEmail: payload.email,
+          caregiverUserId: caregiver.id!,
+          caregiverName: caregiver.name,
+          caregiverEmail: caregiver.email,
+        ),
+      );
+
+      if (!context.mounted) return;
+      showSnackBar(
+        context,
+        created == null
+            ? 'You are already linked to $patientLabel.'
+            : 'Linked to $patientLabel.',
+      );
+    } catch (e) {
+      if (context.mounted) {
+        showSnackBar(context, 'Failed to link account: $e');
+      }
+    }
   }
 }
